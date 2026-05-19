@@ -12,9 +12,5 @@ export interface CalendarItem {
   modalidade?: string;
   completed?: boolean;
   order?: number;
-}
-
-export interface DateRange {
-  start: Date;
-  end: Date;
+  cover?: string;
 }

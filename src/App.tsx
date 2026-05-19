@@ -15,7 +15,6 @@ import {
   endOfYear,
   eachMonthOfInterval,
   startOfWeek,
-  eachWeekOfInterval,
   isSameMonth
 } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -29,25 +28,24 @@ import {
   Pencil,
   Moon,
   Sun,
-  Lock,
-  LockOpen,
   X,
   Upload,
-  SquareCheckBig,
   Check,
-  Users,
-  Compass,
   Eye,
   EyeOff,
   Download
 } from 'lucide-react';
 import { motion, AnimatePresence, Reorder } from 'motion/react';
 import { cn } from '@/src/lib/utils';
-import { CalendarItem, DateRange, ItemType } from '@/src/types';
+import { CalendarItem, ItemType } from '@/src/types';
 
 import adminPadlock from '@/src/elements/admin_padlock.svg';
 import adminPadlockUnlock from '@/src/elements/admin_padlock_unlock.svg';
-import changeMode from '@/src/elements/change_mode.svg';
+import taskMode from '@/src/elements/task_mode.svg';
+import timelineMode from '@/src/elements/timeline_mode.svg';
+import checklistIcon from '@/src/elements/checklist.svg';
+import responsibleIcon from '@/src/elements/responsible.svg';
+import guidelinesIcon from '@/src/elements/guidelines.svg';
 
 
 
@@ -104,7 +102,7 @@ export default function App() {
   const [currentDate, setCurrentDate] = useState(() => {
     const today = new Date();
     const monthEnd = endOfMonth(today);
-    const mondays = eachDayOfInterval({ start: startOfMonth(today), end: monthEnd }).filter(isMonday);
+    const mondays = eachDayOfInterval({ start: startOfMonth(today), end: monthEnd }).filter(d => isMonday(d));
     if (mondays.length === 0) return today;
     const lastMonday = mondays[mondays.length - 1];
     // If the last meeting of the month has passed, start showing the next month
@@ -124,7 +122,7 @@ export default function App() {
 
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
   const [itemToDelete, setItemToDelete] = useState<string | null>(null);
-  const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [selectedImage, setSelectedImage] = useState<{url: string, title: string} | null>(null);
 
   const handleReorder = (newOrder: CalendarItem[]) => {
     setItems(prev => {
@@ -164,7 +162,7 @@ export default function App() {
     try {
       const today = currentDate;
       const monthEnd = endOfMonth(today);
-      const mondays = eachDayOfInterval({ start: startOfMonth(today), end: monthEnd }).filter(isMonday);
+      const mondays = eachDayOfInterval({ start: startOfMonth(today), end: monthEnd }).filter(d => isMonday(d));
       const lastMonday = mondays[mondays.length - 1] || today;
       // Use startOfMonth when advancing to ensure we don't skip to the end of the next month
       const effectiveMonthDate = isAfter(today, lastMonday) ? startOfMonth(addMonths(today, 1)) : today;
@@ -174,13 +172,13 @@ export default function App() {
           start: startOfMonth(selectedMonthInYearView), 
           end: endOfMonth(selectedMonthInYearView) 
         });
-        return activeTab === 'cronograma' ? interval.filter(isMonday) : interval;
+        return activeTab === 'cronograma' ? interval.filter(d => isMonday(d)) : interval;
       } else if (viewMode === 'MONTH') {
         const interval = eachDayOfInterval({ 
           start: startOfMonth(effectiveMonthDate), 
           end: endOfMonth(effectiveMonthDate) 
         });
-        return activeTab === 'cronograma' ? interval.filter(isMonday) : interval;
+        return activeTab === 'cronograma' ? interval.filter(d => isMonday(d)) : interval;
       } else if (viewMode === 'DAY') {
         if (activeTab === 'cronograma') {
           return [isMonday(today) ? today : nextMonday(today)];
@@ -195,6 +193,9 @@ export default function App() {
     return eachMonthOfInterval({
       start: startOfYear(currentDate),
       end: endOfYear(currentDate)
+    }).filter(month => {
+      const m = month.getMonth();
+      return m > 0 && m < 11;
     });
   }, [currentDate]);
 
@@ -253,53 +254,28 @@ export default function App() {
           <motion.button 
             onClick={() => setActiveTab(activeTab === 'cronograma' ? 'tarefas' : 'cronograma')}
             whileHover={{ scale: 1 }}
-            className="w-[37px] h-[37px] flex items-center justify-center flex-shrink-0 relative transition-transform duration-200"
+            className="w-[36px] h-[36px] flex items-center justify-center flex-shrink-0 relative overflow-hidden transition-transform duration-200"
             title={activeTab === 'cronograma' ? 'Ir para Modo Tarefa' : 'Ir para Modo Cronograma'}
           >
-            <img 
-              src={changeMode} 
-              alt="Change App Mode" 
-              className={cn(
-                "w-[28px] h-[28px] relative z-10 transition-all duration-300 transform-gpu",
-                activeTab === 'tarefas' ? "drop-shadow-[0_0_8px_#00cc00ff]" : "drop-shadow-none"
-              )}
-            />
+            <AnimatePresence initial={false}>
+              <motion.img 
+                key={activeTab}
+                src={activeTab === 'tarefas' ? taskMode : timelineMode} 
+                alt="Change App Mode" 
+                initial={{ y: 15, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                exit={{ y: -15, opacity: 0 }}
+                transition={{ duration: 0.25, ease: "easeInOut" }}
+                className="w-[24px] h-[24px] absolute z-10 drop-shadow-none"
+              />
+            </AnimatePresence>
           </motion.button>
 
-          {activeTab === 'cronograma' ? (
-            <div className={cn("flex gap-1 p-1 rounded-full flex-shrink-0 relative w-[190px] sm:w-[220px] h-[30px] items-center justify-center", darkMode ? "bg-[#262626ff]" : "bg-[#E2E2E2]")}>
-                {(['DAY', 'MONTH', 'YEAR'] as const).map(mode => (
-                  <button
-                    key={mode}
-                    onClick={() => {
-                      setViewMode(mode);
-                      if (mode === 'YEAR') setSelectedMonthInYearView(null);
-                    }}
-                    className={cn(
-                      "px-3 sm:px-4 h-full flex items-center rounded-full text-xs font-display font-bold uppercase tracking-wider transition-colors relative",
-                      viewMode === mode ? "text-[#00cc00ff]" : (darkMode ? "text-[#f7f7f7ff] hover:text-[#00cc00ff]/80" : "text-[#121212ff] hover:text-[#00cc00ff]/80")
-                    )}
-                  >
-                    {viewMode === mode && (
-                      <motion.div
-                        layoutId="activeViewMode"
-                        className="absolute inset-0 bg-background shadow-sm rounded-full"
-                        transition={{ type: "tween", duration: 0.2 }}
-                      />
-                    )}
-                    <span className="relative z-10">
-                      {mode === 'DAY' ? 'Semana' : mode === 'MONTH' ? 'Mês' : 'Ano'}
-                    </span>
-                  </button>
-                ))}
-            </div>
-          ) : (
-            <div className={cn("px-6 rounded-full flex-shrink-0 relative flex items-center justify-center w-[190px] sm:w-[220px] h-[30px]", darkMode ? "bg-[#262626ff]" : "bg-[#E2E2E2]")}>
-              <span className="text-[#00cc00ff] text-xs font-display font-bold uppercase tracking-widest">
-                MODO TAREFA
-              </span>
-            </div>
-          )}
+          <div className={cn("px-6 rounded-full flex-shrink-0 relative flex items-center justify-center w-[190px] sm:w-[220px] h-[30px]", darkMode ? "bg-[#262626ff]" : "bg-[#E2E2E2]")}>
+            <span className="text-[#00cc00ff] text-xs font-display font-bold uppercase tracking-widest">
+              {activeTab === 'cronograma' ? 'CRONOGRAMA' : 'MODO TAREFAS'}
+            </span>
+          </div>
           
           <button 
             onClick={() => setDarkMode(!darkMode)} 
@@ -341,7 +317,7 @@ export default function App() {
             <AdminIcon 
               className={cn(
                 "w-[24px] h-[24px] transition-all duration-300 transform-gpu",
-                isAdmin ? "drop-shadow-[0_0_8px_#00cc00ff]" : "drop-shadow-none opacity-50 hover:opacity-100"
+                isAdmin ? "opacity-100" : "opacity-40 hover:opacity-100"
               )} 
               unlocked={isAdmin} 
             />
@@ -355,13 +331,44 @@ export default function App() {
         {/* TAB 1: CRONOGRAMA (HIG + Material 3) */}
         {activeTab === 'cronograma' && (
           <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
+              <div className="flex justify-center w-full mb-6 -mt-2">
+                <div className={cn("flex gap-1 p-1 rounded-full flex-shrink-0 relative w-[190px] sm:w-[220px] h-[30px] items-center justify-center", darkMode ? "bg-[#262626ff]" : "bg-[#E2E2E2]")}>
+                    {(['DAY', 'MONTH', 'YEAR'] as const).map(mode => (
+                      <button
+                        key={mode}
+                        onClick={() => {
+                          setViewMode(mode);
+                          if (mode === 'YEAR') setSelectedMonthInYearView(null);
+                        }}
+                        className={cn(
+                          "px-3 sm:px-4 h-full flex items-center rounded-full text-xs font-display font-bold uppercase tracking-wider transition-colors relative",
+                          viewMode === mode ? "text-[#00cc00ff]" : (darkMode ? "text-[#f7f7f7ff] hover:text-[#00cc00ff]/80" : "text-[#121212ff] hover:text-[#00cc00ff]/80")
+                        )}
+                      >
+                        {viewMode === mode && (
+                          <motion.div
+                            layoutId="activeViewModeBody"
+                            className="absolute inset-0 bg-background shadow-sm rounded-full"
+                            transition={{ type: "tween", duration: 0.2 }}
+                          />
+                        )}
+                        <span className="relative z-10">
+                          {mode === 'DAY' ? 'Semana' : mode === 'MONTH' ? 'Mês' : 'Ano'}
+                        </span>
+                      </button>
+                    ))}
+                </div>
+              </div>
               {(viewMode === 'MONTH' || (viewMode === 'YEAR' && selectedMonthInYearView)) && (
                 <div className="flex flex-col items-center justify-center mb-4 pb-2 border-b border-border">
                   <div className="flex items-center gap-6">
                     {viewMode === 'YEAR' && (
                       <button 
                         onClick={() => {
-                          if (selectedMonthInYearView) setSelectedMonthInYearView(addMonths(selectedMonthInYearView, -1));
+                          if (selectedMonthInYearView) {
+                            const prev = addMonths(selectedMonthInYearView, -1);
+                            setSelectedMonthInYearView(prev.getMonth() === 0 ? addMonths(selectedMonthInYearView, -3) : prev);
+                          }
                         }}
                         className="p-1 transition-colors text-primary hover:opacity-70"
                       >
@@ -381,7 +388,10 @@ export default function App() {
                     {viewMode === 'YEAR' && (
                       <button 
                         onClick={() => {
-                          if (selectedMonthInYearView) setSelectedMonthInYearView(addMonths(selectedMonthInYearView, 1));
+                          if (selectedMonthInYearView) {
+                            const next = addMonths(selectedMonthInYearView, 1);
+                            setSelectedMonthInYearView(next.getMonth() === 11 ? addMonths(selectedMonthInYearView, 3) : next);
+                          }
                         }}
                         className="p-1 transition-colors text-primary hover:opacity-70"
                       >
@@ -405,7 +415,7 @@ export default function App() {
                     );
                     const today = new Date();
                     const monthEnd = endOfMonth(today);
-                    const mondays = eachDayOfInterval({ start: startOfMonth(today), end: monthEnd }).filter(isMonday);
+                    const mondays = eachDayOfInterval({ start: startOfMonth(today), end: monthEnd }).filter(d => isMonday(d));
                     const lastMonday = mondays[mondays.length - 1];
                     const effectiveMonthDate = isAfter(today, lastMonday) ? addMonths(today, 1) : today;
                     const isCurrentMonth = isSameMonth(month, effectiveMonthDate);
@@ -516,7 +526,7 @@ export default function App() {
                             <div key={item.id} className="p-6 rounded-2xl bg-card border border-border shadow-sm hover:shadow-lg transition-all flex flex-row items-center gap-6 group">
                               <div className="shrink-0">
                                 <div 
-                                  onClick={() => item.cover && setSelectedImage(item.cover)}
+                                  onClick={() => item.cover && setSelectedImage({url: item.cover, title: item.title})}
                                   className={cn(
                                     "w-20 h-20 border rounded-xl overflow-hidden relative flex items-center justify-center bg-muted/20 shrink-0",
                                     item.cover ? "cursor-zoom-in" : ""
@@ -534,18 +544,18 @@ export default function App() {
                                 </div>
                               </div>
                               <div className="flex-1 flex flex-col gap-2">
-                                <div className="flex items-center justify-end gap-3 w-full text-right">
-                                  <h4 className="text-base font-display font-black text-foreground tracking-tight">{item.title}</h4>
+                                <div className="w-full text-right leading-snug">
+                                  <h4 className="text-base font-display font-black text-foreground tracking-tight inline">{item.title}</h4>
                                   {item.modalidade && (
-                                    <>
-                                      <span className="text-muted-foreground/30 font-light">|</span>
+                                    <span className="inline-block whitespace-nowrap align-baseline ml-2">
+                                      <span className="text-muted-foreground/30 font-light mr-2">|</span>
                                       <span className={cn(
                                         "text-[11px] font-black uppercase tracking-widest italic",
                                         item.modalidade === 'Ponto Facultativo' ? 'text-orange-500' : item.modalidade === 'Feriado' ? 'text-red-500' : 'text-[#00cc00ff]'
                                       )}>
                                         {item.modalidade}
                                       </span>
-                                    </>
+                                    </span>
                                   )}
                                 </div>
                                 {item.description && (
@@ -604,69 +614,7 @@ export default function App() {
               const currentWeekStart = startOfWeek(today, { weekStartsOn: 1 });
               
               // Determine what to show
-              const activeTaskDate = selectedTaskWeek || (selectedTaskMonth ? null : currentWeekStart);
-
-              // 1. Week Selection List (Primary Entry)
-              if (!selectedTaskWeek) {
-                const today = new Date();
-                const monthEnd = endOfMonth(today);
-                const mondays = eachDayOfInterval({ start: startOfMonth(today), end: monthEnd }).filter(isMonday);
-                const lastMonday = mondays[mondays.length - 1];
-                const effectiveMonthDate = isAfter(today, lastMonday) ? addMonths(today, 1) : today;
-                
-                // Use a local variable to ensure we have a month to render
-                const renderMonth = selectedTaskMonth || effectiveMonthDate;
-                
-                const weeks = eachWeekOfInterval({
-                  start: startOfMonth(renderMonth),
-                  end: endOfMonth(renderMonth)
-                }, { weekStartsOn: 1 }).filter(w => isSameMonth(w, renderMonth));
-
-                return (
-                  <div className="space-y-6 max-w-2xl mx-auto">
-                    <div className="flex items-center justify-center gap-4 mb-4 px-4">
-                      <button 
-                        onClick={() => setSelectedTaskMonth(addMonths(renderMonth, -1))}
-                        className="p-1 transition-colors text-primary hover:opacity-70"
-                      >
-                        <ChevronLeft className="w-8 h-8" />
-                      </button>
-                      
-                      <h2 className="text-3xl font-black uppercase font-display text-center">
-                        {format(renderMonth, 'MMMM', { locale: ptBR })}
-                      </h2>
-
-                      <button 
-                        onClick={() => setSelectedTaskMonth(addMonths(renderMonth, 1))}
-                        className="p-1 transition-colors text-primary hover:opacity-70"
-                      >
-                        <ChevronRight className="w-8 h-8" />
-                      </button>
-                    </div>
-                    
-                    <div className="grid gap-4 px-4">
-                      {weeks.map((weekStart) => (
-                        <button
-                          key={weekStart.toISOString()}
-                          onClick={() => {
-                            if (!selectedTaskMonth) setSelectedTaskMonth(renderMonth);
-                            setSelectedTaskWeek(weekStart);
-                          }}
-                          className="bg-card border border-border rounded-2xl p-6 flex justify-between items-center hover:border-primary transition-all group"
-                        >
-                          <div className="flex flex-col items-start">
-                            <span className="text-sm font-bold uppercase">
-                              <span className="text-[#00cc00ff]">{format(weekStart, "dd")}</span>
-                              <span className={darkMode ? "text-[#f7f7f7ff]" : "text-[#121212ff]"}>/{format(weekStart, "MM")}</span>
-                            </span>
-                          </div>
-                          <ChevronRight className="w-5 h-5 text-primary group-hover:opacity-80 transition-all" />
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                );
-              }
+              const activeTaskDate = selectedTaskWeek || currentWeekStart;
 
               // 3. MAIN DASHBOARD (User or Admin specific week)
               if (activeTaskDate) {
@@ -681,21 +629,13 @@ export default function App() {
 
                 return (
                   <div className="space-y-10">
-                    <div className="flex items-center mb-4">
-                      <button 
-                        onClick={() => setSelectedTaskWeek(null)}
-                        className="p-1 pr-2 transition-colors text-primary hover:opacity-70"
-                      >
-                        <ChevronLeft className="w-8 h-8" />
-                      </button>
-                    </div>
 
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                       {/* Checklist Panel */}
-                      <div className="bg-card border border-border rounded-[2.5rem] p-8 shadow-sm flex flex-col min-h-[400px]">
+                      <div className="bg-card border border-border rounded-[2.5rem] p-8 shadow-sm flex flex-col min-h-[400px] relative">
                         <div className="flex justify-between items-center mb-8">
                           <h3 className={cn("text-xl font-black uppercase flex items-center gap-3 font-display", darkMode ? "text-[#f7f7f7ff]" : "text-[#121212ff]")}>
-                            <SquareCheckBig className="w-6 h-6 text-primary" />
+                            <img src={checklistIcon} className="w-6 h-6" alt="Checklist" />
                             Checklist
                           </h3>
                           {isAdmin && (
@@ -704,7 +644,7 @@ export default function App() {
                             </button>
                           )}
                         </div>
-                        <Reorder.Group axis="y" values={checklist} onReorder={handleReorder} className="space-y-3 flex-1">
+                        <Reorder.Group axis="y" values={checklist} onReorder={handleReorder} className="space-y-3 flex-1 flex flex-col">
                           {checklist.map((item) => {
                                     return (
                                       <Reorder.Item 
@@ -770,15 +710,19 @@ export default function App() {
                                       </Reorder.Item>
                                     );
                                   })}
-                          {checklist.length === 0 && <p className="text-xs text-muted-foreground italic text-center py-10">Nenhuma atividade registrada para esta semana.</p>}
                         </Reorder.Group>
+                        {checklist.length === 0 && (
+                          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                            <p className="text-xs text-muted-foreground italic text-center px-8">Nenhuma atividade registrada para esta semana.</p>
+                          </div>
+                        )}
                       </div>
 
                       {/* Responsáveis Panel */}
-                      <div className="bg-card border border-border rounded-[2.5rem] p-8 shadow-sm flex flex-col min-h-[400px]">
+                      <div className="bg-card border border-border rounded-[2.5rem] p-8 shadow-sm flex flex-col min-h-[400px] relative">
                         <div className="flex justify-between items-center mb-8">
                           <h3 className={cn("text-xl font-black uppercase flex items-center gap-3 font-display", darkMode ? "text-[#f7f7f7ff]" : "text-[#121212ff]")}>
-                            <Users className="w-6 h-6 text-primary" />
+                            <img src={responsibleIcon} className="w-6 h-6" alt="Responsáveis" />
                             Responsáveis
                           </h3>
                           {isAdmin && (
@@ -787,7 +731,7 @@ export default function App() {
                             </button>
                           )}
                         </div>
-                        <Reorder.Group axis="y" values={responsaveis} onReorder={handleReorder} className="space-y-3 flex-1">
+                        <Reorder.Group axis="y" values={responsaveis} onReorder={handleReorder} className="space-y-3 flex-1 flex flex-col">
                           {responsaveis.map((item) => {
                                     return (
                                       <Reorder.Item 
@@ -838,15 +782,19 @@ export default function App() {
                                       </Reorder.Item>
                                     );
                                   })}
-                          {responsaveis.length === 0 && <p className="text-xs text-muted-foreground italic text-center py-10">Nenhum responsável escalado para esta semana.</p>}
                         </Reorder.Group>
+                        {responsaveis.length === 0 && (
+                          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                            <p className="text-xs text-muted-foreground italic text-center px-8">Nenhum responsável escalado para esta semana.</p>
+                          </div>
+                        )}
                       </div>
 
                       {/* Orientações Panel */}
-                      <div className="bg-card border border-border rounded-[2.5rem] p-8 shadow-sm flex flex-col min-h-[400px]">
+                      <div className="bg-card border border-border rounded-[2.5rem] p-8 shadow-sm flex flex-col min-h-[400px] relative">
                         <div className="flex justify-between items-center mb-8">
                           <h3 className={cn("text-xl font-black uppercase flex items-center gap-3 font-display", darkMode ? "text-[#f7f7f7ff]" : "text-[#121212ff]")}>
-                            <Compass className="w-6 h-6 text-primary" />
+                            <img src={guidelinesIcon} className="w-6 h-6" alt="Orientações" />
                             Orientações
                           </h3>
                           {isAdmin && (
@@ -855,7 +803,7 @@ export default function App() {
                             </button>
                           )}
                         </div>
-                        <Reorder.Group axis="y" values={orientacoes} onReorder={handleReorder} className="space-y-4 flex-1">
+                        <Reorder.Group axis="y" values={orientacoes} onReorder={handleReorder} className="space-y-4 flex-1 flex flex-col">
                           {orientacoes.map(item => {
                                   return (
                                     <Reorder.Item key={item.id} value={item} className="group relative flex items-start gap-3 p-2 -mx-2 rounded-xl hover:bg-primary/5 transition-colors cursor-grab active:cursor-grabbing">
@@ -895,8 +843,12 @@ export default function App() {
                                     </Reorder.Item>
                                   );
                                 })}
-                          {orientacoes.length === 0 && <p className="text-xs text-muted-foreground italic text-center py-10">Nenhuma orientação registrada para esta semana.</p>}
                         </Reorder.Group>
+                        {orientacoes.length === 0 && (
+                          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                            <p className="text-xs text-muted-foreground italic text-center px-8">Nenhuma orientação registrada para esta semana.</p>
+                          </div>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -984,7 +936,7 @@ export default function App() {
                                       return eachDayOfInterval({ 
                                         start: startOfMonth(selectedDate), 
                                         end: endOfMonth(selectedDate) 
-                                      }).filter(isMonday).map(d => d.getDate());
+                                      }).filter(d => isMonday(d)).map(d => d.getDate());
                                     }
                                     return Array.from({ length: endOfMonth(selectedDate).getDate() }, (_, i) => i + 1);
                                   })();
@@ -1383,12 +1335,12 @@ export default function App() {
               initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
               className="relative z-10 w-full max-w-5xl max-h-[70vh] flex items-center justify-center rounded-2xl overflow-hidden shadow-2xl border border-white/10"
             >
-              <img src={selectedImage} alt="Preview" className="max-w-full max-h-full object-contain" />
+              <img src={selectedImage.url} alt="Preview" className="max-w-full max-h-full object-contain" />
             </motion.div>
             <motion.a 
               initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-              href={selectedImage} 
-              download="capa_evento.png"
+              href={selectedImage.url} 
+              download={`${selectedImage.title.toLowerCase().replace(/\s+/g, '')}.png`}
               onClick={() => setSelectedImage(null)}
               className="relative z-10 mt-2 md:mt-6 p-2 text-[#f7f7f7ff]"
               title="Baixar Imagem (PNG)"
