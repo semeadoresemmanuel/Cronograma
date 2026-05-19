@@ -1235,7 +1235,7 @@ export default function App() {
                       }
                     }}
                     className={cn(
-                      "w-full bg-muted border rounded-2xl px-12 py-4 text-center text-lg tracking-widest focus:outline-none transition-all",
+                      "w-full bg-muted border rounded-2xl px-12 py-4 text-center text-lg tracking-widest italic focus:outline-none transition-all",
                       authError ? "border-destructive ring-1 ring-destructive" : "border-border focus:border-primary/50"
                     )}
                   />
