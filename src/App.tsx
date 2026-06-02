@@ -43,9 +43,6 @@ import adminPadlock from '@/src/elements/admin_padlock.svg';
 import adminPadlockUnlock from '@/src/elements/admin_padlock_unlock.svg';
 import taskMode from '@/src/elements/task_mode.svg';
 import timelineMode from '@/src/elements/timeline_mode.svg';
-import checklistIcon from '@/src/elements/checklist.svg';
-import responsibleIcon from '@/src/elements/responsible.svg';
-import guidelinesIcon from '@/src/elements/guidelines.svg';
 
 
 
@@ -273,7 +270,7 @@ export default function App() {
 
           <div className={cn("px-6 rounded-full flex-shrink-0 relative flex items-center justify-center w-[190px] sm:w-[220px] h-[30px]", darkMode ? "bg-[#262626ff]" : "bg-[#E2E2E2]")}>
             <span className="text-[#00cc00ff] text-xs font-display font-bold uppercase tracking-widest">
-              {activeTab === 'cronograma' ? 'CRONOGRAMA' : 'MODO TAREFAS'}
+              {activeTab === 'cronograma' ? 'CRONOGRAMA' : 'TAREFAS'}
             </span>
           </div>
           
@@ -426,9 +423,10 @@ export default function App() {
                         onClick={() => setSelectedMonthInYearView(month)}
                         className={cn(
                           "p-6 rounded-3xl border transition-all text-left group relative overflow-hidden",
+                          darkMode ? "bg-[#262626]" : "bg-[#E2E2E2]",
                           isCurrentMonth 
-                            ? "bg-card border-primary" 
-                            : "bg-card border-border hover:border-primary/50 hover:shadow-md"
+                            ? "border-primary" 
+                            : "border-border hover:border-primary/50 hover:shadow-md"
                         )}
                       >
                         <div className="flex justify-between items-center mb-4 pr-16">
@@ -438,8 +436,8 @@ export default function App() {
                         </div>
 
                         <div className="absolute right-0 top-1/2 -translate-y-1/2 flex items-center justify-center gap-3 min-w-[80px]">
-                          <div className="w-[1px] h-12 bg-border" />
-                          <span className="text-lg font-bold text-[#00cc00ff]">
+                          <div className="w-[1px] h-12 bg-[#00cc00]" />
+                          <span className="text-lg font-display font-bold text-[#00cc00ff]">
                            {format(month, 'yyyy')}
                           </span>
                         </div>
@@ -515,8 +513,8 @@ export default function App() {
                           if (dayItems.length === 0) {
                             return (
                               <div className={cn(
-                                "p-6 rounded-2xl border border-dashed text-xs uppercase tracking-widest font-bold text-center",
-                                darkMode ? "border-[#C5C5C5] text-[#C5C5C5]" : "border-[#121212ff] text-[#121212ff]"
+                                "p-6 rounded-2xl text-xs uppercase tracking-widest font-bold text-center",
+                                darkMode ? "bg-[#262626] text-[#C5C5C5]" : "bg-[#e2e2e2] text-[#121212ff]"
                               )}>
                                 Livre
                               </div>
@@ -572,17 +570,23 @@ export default function App() {
                                     </div>
                                   )}
                                   {isAdmin && (
-                                    <div className={cn(
-                                      "flex items-center gap-0 border-[0.5px] rounded-full p-0.5 bg-transparent",
-                                      darkMode ? "border-zinc-600" : "border-zinc-300"
-                                    )}>
-                                      <button onClick={() => openAddModal(item.date, item)} className={cn(
-                                        "p-1.5 rounded-full transition-colors",
-                                        darkMode ? "text-[#f7f7f7ff]/70 hover:text-[#f7f7f7ff] hover:bg-[#f7f7f7ff]/10" : "text-black/70 hover:text-black hover:bg-black/10"
-                                      )}>
+                                    <div 
+                                      className="flex items-center gap-0 border rounded-full p-0.5 bg-transparent"
+                                      style={{ 
+                                        borderWidth: '0.5px', 
+                                        borderColor: darkMode ? 'rgba(247, 247, 247, 0.4)' : 'rgba(18, 18, 18, 0.4)' 
+                                      }}
+                                    >
+                                      <button onClick={() => openAddModal(item.date, item)} className="p-1.5 rounded-full transition-colors text-primary/70 hover:text-primary hover:bg-primary/10">
                                         <Pencil className="w-4 h-4" />
                                       </button>
-                                      <div className={cn("w-[1px] h-4 mx-1 opacity-25", darkMode ? "bg-[#f7f7f7ff]" : "bg-black")}></div>
+                                      <div 
+                                        className="h-4 mx-1" 
+                                        style={{ 
+                                          width: '0.5px', 
+                                          backgroundColor: darkMode ? 'rgba(247, 247, 247, 0.4)' : 'rgba(18, 18, 18, 0.4)' 
+                                        }} 
+                                      />
                                       <button onClick={(e) => { e.stopPropagation(); setItemToDelete(item.id); setIsDeleteConfirmOpen(true); }} className="p-1.5 text-destructive/70 hover:text-destructive hover:bg-destructive/10 rounded-full transition-colors">
                                         <Trash className="w-4 h-4" />
                                       </button>
@@ -628,73 +632,77 @@ export default function App() {
                 const orientacoes = weekItems.filter(i => i.category === 'orientacao');
 
                 return (
-                  <div className="space-y-10">
-
-                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                      {/* Checklist Panel */}
-                      <div className="bg-card border border-border rounded-[2.5rem] p-8 shadow-sm flex flex-col min-h-[400px] relative">
-                        <div className="flex justify-between items-center mb-8">
-                          <h3 className={cn("text-xl font-black uppercase flex items-center gap-3 font-display", darkMode ? "text-[#f7f7f7ff]" : "text-[#121212ff]")}>
-                            <img src={checklistIcon} className="w-6 h-6" alt="Checklist" />
-                            Checklist
-                          </h3>
-                          {isAdmin && (
-                            <button onClick={() => openAddModal(activeTaskDate, undefined, 'task', 'checklist')} className="p-1.5 rounded-full bg-primary/10 text-primary hover:bg-primary/20">
-                              <Plus className="w-4 h-4" />
-                            </button>
-                          )}
-                        </div>
-                        <Reorder.Group axis="y" values={checklist} onReorder={handleReorder} className="space-y-3 flex-1 flex flex-col">
-                          {checklist.map((item) => {
-                                    return (
-                                      <Reorder.Item 
-                                        key={item.id} 
-                                        value={item}
-                                        className={cn(
-                                          "flex items-center justify-between group gap-3 bg-card/50 rounded-xl p-2 -mx-2 transition-colors select-none hover:bg-primary/5 cursor-grab active:cursor-grabbing"
-                                        )}
-                                      >
-                                        <div className="flex items-center gap-3 flex-1">
-
-                                          <label className="flex items-center gap-3 cursor-pointer flex-1">
-                                          <div className="relative flex items-center justify-center shrink-0">
-                                            <input 
-                                              type="checkbox" 
-                                              checked={item.completed}
-                                              onChange={() => handleToggleTask(item.id)}
-                                              className="peer appearance-none w-5 h-5 border-2 border-primary/40 rounded-[4px] checked:bg-primary checked:border-primary transition-all cursor-pointer" 
-                                            />
-                                            <Check className="absolute w-3.5 h-3.5 text-white opacity-0 peer-checked:opacity-100 transition-opacity pointer-events-none" strokeWidth={4} />
-                                          </div>
-                                          <div className="flex flex-col gap-1">
-                                            <div className="flex items-center gap-2">
-                                              <span className={cn(
-                                                "text-sm font-bold transition-all",
-                                                item.completed ? "text-muted-foreground line-through" : "text-foreground"
-                                              )}>
-                                                {item.title}
-                                              </span>
-                                              {item.modalidade && (
-                                                <span className="px-1.5 py-0.5 rounded text-[10px] uppercase font-black bg-primary/10 text-primary tracking-wider w-fit">
-                                                  {item.modalidade}
-                                                </span>
-                                              )}
-                                            </div>
-                                          </div>
-                                        </label>
+                  <div className="max-w-xl mx-auto">
+                    {isAdmin && (
+                      <div className="flex justify-center -mt-2 mb-4">
+                        <button onClick={() => openAddModal(activeTaskDate, undefined, 'task', 'checklist')} className="p-1.5 rounded-full bg-primary/10 text-primary hover:bg-primary/20">
+                          <Plus className="w-4 h-4" />
+                        </button>
+                      </div>
+                    )}
+                    
+                    {checklist.length > 0 ? (
+                      <Reorder.Group axis="y" values={checklist} onReorder={handleReorder} className="space-y-3 flex-1 flex flex-col">
+                        {checklist.map((item) => {
+                                  return (
+                                    <Reorder.Item 
+                                      key={item.id} 
+                                      value={item}
+                                      className={cn(
+                                        "flex items-start justify-between group gap-4 border border-border rounded-3xl p-6 transition-colors select-none shadow-sm hover:shadow-md cursor-grab active:cursor-grabbing",
+                                        darkMode ? "bg-[#262626]" : "bg-[#E2E2E2]"
+                                      )}
+                                    >
+                                      <div className="flex-1 min-w-0">
+                                        <div className="flex flex-col gap-1.5">
+                                          <span className="text-sm font-bold text-foreground">
+                                            {item.title}
+                                          </span>
+                                          {item.description && (
+                                            <span className="text-xs text-muted-foreground leading-relaxed">
+                                              {item.description}
+                                            </span>
+                                          )}
+                                          {(item.startTime || item.endTime) && (
+                                            <span className="text-[10px] text-muted-foreground flex items-center gap-1">
+                                              <Clock className="w-3.5 h-3.5" />
+                                              <span>{item.startTime}{item.startTime && item.endTime ? ' - ' : ''}{item.endTime}</span>
+                                            </span>
+                                          )}
                                         </div>
+                                      </div>
+                                      
+                                      <div className="flex flex-col items-end gap-3 shrink-0 select-none">
+                                        {item.modalidade && (
+                                          <span className="px-2.5 py-0.5 rounded-full text-[10px] uppercase font-black bg-primary/10 text-primary tracking-wider whitespace-nowrap">
+                                            {item.modalidade}
+                                          </span>
+                                        )}
                                         {isAdmin && (
-                                          <div className="flex items-center gap-3 px-3 py-1.5 bg-card border border-border shadow-sm rounded-full cursor-default" onPointerDown={(e) => e.stopPropagation()}>
+                                          <div 
+                                            className="flex items-center gap-3 px-3 py-1.5 bg-transparent border rounded-full cursor-default" 
+                                            style={{ 
+                                              borderWidth: '0.5px',
+                                              borderColor: darkMode ? 'rgba(247, 247, 247, 0.4)' : 'rgba(18, 18, 18, 0.4)'
+                                            }}
+                                            onPointerDown={(e) => e.stopPropagation()}
+                                          >
                                             <button 
                                               onClick={(e) => {
                                                 e.stopPropagation();
                                                 openAddModal(item.date, item, 'task', 'checklist');
                                               }} 
-                                              className={cn("transition-transform", darkMode ? "text-primary" : "text-black")}
+                                              className="text-primary hover:opacity-80 transition-transform"
                                             >
                                               <Pencil className="w-3.5 h-3.5" />
                                             </button>
-                                            <div className="w-[1px] h-3 bg-border" />
+                                            <div 
+                                              className="h-3" 
+                                              style={{ 
+                                                width: '0.5px',
+                                                backgroundColor: darkMode ? 'rgba(247, 247, 247, 0.4)' : 'rgba(18, 18, 18, 0.4)'
+                                              }} 
+                                            />
                                             <button 
                                               onClick={(e) => {
                                                 e.stopPropagation();
@@ -707,150 +715,18 @@ export default function App() {
                                             </button>
                                           </div>
                                         )}
-                                      </Reorder.Item>
-                                    );
-                                  })}
-                        </Reorder.Group>
-                        {checklist.length === 0 && (
-                          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                            <p className="text-xs text-muted-foreground italic text-center px-8">Nenhuma atividade registrada para esta semana.</p>
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Responsáveis Panel */}
-                      <div className="bg-card border border-border rounded-[2.5rem] p-8 shadow-sm flex flex-col min-h-[400px] relative">
-                        <div className="flex justify-between items-center mb-8">
-                          <h3 className={cn("text-xl font-black uppercase flex items-center gap-3 font-display", darkMode ? "text-[#f7f7f7ff]" : "text-[#121212ff]")}>
-                            <img src={responsibleIcon} className="w-6 h-6" alt="Responsáveis" />
-                            Responsáveis
-                          </h3>
-                          {isAdmin && (
-                            <button onClick={() => openAddModal(activeTaskDate, undefined, 'task', 'responsavel')} className="p-1.5 rounded-full bg-primary/10 text-primary hover:bg-primary/20">
-                              <Plus className="w-4 h-4" />
-                            </button>
-                          )}
-                        </div>
-                        <Reorder.Group axis="y" values={responsaveis} onReorder={handleReorder} className="space-y-3 flex-1 flex flex-col">
-                          {responsaveis.map((item) => {
-                                    return (
-                                      <Reorder.Item 
-                                        key={item.id} 
-                                        value={item}
-                                        className={cn(
-                                          "flex items-center justify-between group gap-3 bg-card/50 rounded-xl p-2 -mx-2 transition-colors select-none hover:bg-primary/5 cursor-grab active:cursor-grabbing"
-                                        )}
-                                      >
-                                        <div className="flex items-center gap-3 flex-1">
-
-                                          <div className="flex flex-col gap-0.5">
-                                            <div className="flex items-center gap-2">
-                                              <span className="text-sm font-bold text-foreground">{item.title}</span>
-                                              {item.modalidade && (
-                                                <span className="px-1.5 py-0.5 rounded text-[10px] uppercase font-black bg-primary/10 text-primary tracking-wider w-fit">
-                                                  {item.modalidade}
-                                                </span>
-                                              )}
-                                            </div>
-                                            {item.description && <span className="text-[10px] text-muted-foreground uppercase font-bold">{item.description}</span>}
-                                          </div>
-                                        </div>
-                                        {isAdmin && (
-                                          <div className="flex items-center gap-3 px-3 py-1.5 bg-card border border-border shadow-sm rounded-full cursor-default" onPointerDown={(e) => e.stopPropagation()}>
-                                            <button 
-                                              onClick={(e) => {
-                                                e.stopPropagation();
-                                                openAddModal(item.date, item, 'task', 'responsavel');
-                                              }} 
-                                              className={cn("transition-transform", darkMode ? "text-primary" : "text-black")}
-                                            >
-                                              <Pencil className="w-3.5 h-3.5" />
-                                            </button>
-                                            <div className="w-[1px] h-3 bg-border" />
-                                            <button 
-                                              onClick={(e) => {
-                                                e.stopPropagation();
-                                                setItemToDelete(item.id);
-                                                setIsDeleteConfirmOpen(true);
-                                              }} 
-                                              className="text-destructive transition-transform"
-                                            >
-                                              <Trash className="w-3.5 h-3.5" />
-                                            </button>
-                                          </div>
-                                        )}
-                                      </Reorder.Item>
-                                    );
-                                  })}
-                        </Reorder.Group>
-                        {responsaveis.length === 0 && (
-                          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                            <p className="text-xs text-muted-foreground italic text-center px-8">Nenhum responsável escalado para esta semana.</p>
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Orientações Panel */}
-                      <div className="bg-card border border-border rounded-[2.5rem] p-8 shadow-sm flex flex-col min-h-[400px] relative">
-                        <div className="flex justify-between items-center mb-8">
-                          <h3 className={cn("text-xl font-black uppercase flex items-center gap-3 font-display", darkMode ? "text-[#f7f7f7ff]" : "text-[#121212ff]")}>
-                            <img src={guidelinesIcon} className="w-6 h-6" alt="Orientações" />
-                            Orientações
-                          </h3>
-                          {isAdmin && (
-                            <button onClick={() => openAddModal(activeTaskDate, undefined, 'task', 'orientacao')} className="p-1.5 rounded-full bg-primary/10 text-primary hover:bg-primary/20">
-                              <Plus className="w-4 h-4" />
-                            </button>
-                          )}
-                        </div>
-                        <Reorder.Group axis="y" values={orientacoes} onReorder={handleReorder} className="space-y-4 flex-1 flex flex-col">
-                          {orientacoes.map(item => {
-                                  return (
-                                    <Reorder.Item key={item.id} value={item} className="group relative flex items-start gap-3 p-2 -mx-2 rounded-xl hover:bg-primary/5 transition-colors cursor-grab active:cursor-grabbing">
-
-                                      <div className="flex-1">
-                                      <div className="border-l-4 border-primary/30 pl-4 py-1">
-                                        <div className="flex items-center gap-2 mb-1">
-                                          <h5 className="text-sm font-bold text-foreground">{item.modalidade || item.title}</h5>
-                                        </div>
-                                        <p className="text-xs text-muted-foreground leading-relaxed">{item.description}</p>
-                                      </div>
-                                      {isAdmin && (
-                                        <div className="absolute top-0 right-0 flex items-center gap-3 px-3 py-1.5 bg-card border border-border shadow-sm rounded-full cursor-default" onPointerDown={(e) => e.stopPropagation()}>
-                                          <button 
-                                            onClick={(e) => {
-                                              e.stopPropagation();
-                                              openAddModal(item.date, item, 'task', 'orientacao');
-                                            }} 
-                                            className={cn("transition-transform", darkMode ? "text-primary" : "text-black")}
-                                          >
-                                            <Pencil className="w-3.5 h-3.5" />
-                                          </button>
-                                          <div className="w-[1px] h-3 bg-border" />
-                                          <button 
-                                            onClick={(e) => {
-                                              e.stopPropagation();
-                                              setItemToDelete(item.id);
-                                              setIsDeleteConfirmOpen(true);
-                                            }} 
-                                            className="text-destructive transition-transform"
-                                          >
-                                            <Trash className="w-3.5 h-3.5" />
-                                          </button>
-                                        </div>
-                                      )}
                                       </div>
                                     </Reorder.Item>
                                   );
                                 })}
-                        </Reorder.Group>
-                        {orientacoes.length === 0 && (
-                          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                            <p className="text-xs text-muted-foreground italic text-center px-8">Nenhuma orientação registrada para esta semana.</p>
-                          </div>
-                        )}
+                      </Reorder.Group>
+                    ) : (
+                      <div className={cn("border border-border rounded-3xl p-6 shadow-sm text-center", darkMode ? "bg-[#262626]" : "bg-[#E2E2E2]")}>
+                        <p className={cn("text-xs italic py-2 px-2", darkMode ? "text-[#F7F7F7]" : "text-[#121212]")}>
+                          Nenhuma atividade registrada para esta semana.
+                        </p>
                       </div>
-                    </div>
+                    )}
                   </div>
                 );
               }
@@ -1055,20 +931,33 @@ export default function App() {
                 )}
 
                 {(formCategory !== 'orientacao' && formCategory !== 'responsavel') ? (
-                  <div className="space-y-1">
-                    <label className="block text-center text-sm font-medium text-foreground">
-                      {formType === 'task' 
-                        ? (formCategory === 'checklist' ? 'Tarefa' : 'Assunto')
-                        : (['Ponto Facultativo', 'Feriado'].includes(selectedModalidade) ? 'Tipo' : 'Tema')}
-                    </label>
-                    <input 
-                      name="title" 
-                      value={formTitle} 
-                      onChange={(e) => setFormTitle(e.target.value)}
-                      required
-                      className="w-full p-2.5 text-center rounded-xl bg-transparent border border-border focus:border-primary outline-none transition-all" 
-                    />
-                  </div>
+                  <>
+                    <div className="space-y-1">
+                      <label className="block text-center text-sm font-medium text-foreground">
+                        {formType === 'task' 
+                          ? (formCategory === 'checklist' ? 'Tarefa' : 'Assunto')
+                          : (['Ponto Facultativo', 'Feriado'].includes(selectedModalidade) ? 'Tipo' : 'Tema')}
+                      </label>
+                      <input 
+                        name="title" 
+                        value={formTitle} 
+                        onChange={(e) => setFormTitle(e.target.value)}
+                        required
+                        className="w-full p-2.5 text-center rounded-xl bg-transparent border border-border focus:border-primary outline-none transition-all" 
+                      />
+                    </div>
+                    {formType === 'task' && formCategory === 'checklist' && (
+                      <div className="space-y-1">
+                        <label className="block text-center text-sm font-medium text-foreground">Descrição</label>
+                        <textarea 
+                          name="description" 
+                          defaultValue={editingItem?.description || ""} 
+                          rows={2}
+                          className="w-full p-2.5 text-center rounded-xl bg-transparent border border-border focus:border-primary outline-none transition-all resize-none" 
+                        />
+                      </div>
+                    )}
+                  </>
                 ) : (
                   formCategory === 'orientacao' && <input type="hidden" name="title" value="Orientação" />
                 )}
@@ -1080,11 +969,45 @@ export default function App() {
                         <div className="grid grid-cols-2 gap-4">
                           <div className="space-y-1">
                             <label className="block text-center text-sm font-medium text-foreground">Início</label>
-                            <input name="startTime" type="time" defaultValue={editingItem?.startTime || "00:00"} className="w-full p-2.5 text-center rounded-xl bg-transparent border border-border focus:border-primary outline-none transition-all" />
+                            {selectedModalidade === 'Prática' ? (
+                              <input 
+                                key="startTime-pratica"
+                                name="startTime" 
+                                type="time" 
+                                value="18:45" 
+                                readOnly 
+                                className="w-full p-2.5 text-center rounded-xl bg-transparent border border-border outline-none transition-all opacity-60 cursor-not-allowed" 
+                              />
+                            ) : (
+                              <input 
+                                key="startTime-normal"
+                                name="startTime" 
+                                type="time" 
+                                defaultValue={editingItem?.startTime || "00:00"} 
+                                className="w-full p-2.5 text-center rounded-xl bg-transparent border border-border focus:border-primary outline-none transition-all" 
+                              />
+                            )}
                           </div>
                           <div className="space-y-1">
                             <label className="block text-center text-sm font-medium text-foreground">Término</label>
-                            <input name="endTime" type="time" defaultValue={editingItem?.endTime || "00:00"} className="w-full p-2.5 text-center rounded-xl bg-transparent border border-border focus:border-primary outline-none transition-all" />
+                            {selectedModalidade === 'Prática' ? (
+                              <input 
+                                key="endTime-pratica"
+                                name="endTime" 
+                                type="time" 
+                                value="20:00" 
+                                readOnly 
+                                className="w-full p-2.5 text-center rounded-xl bg-transparent border border-border outline-none transition-all opacity-60 cursor-not-allowed" 
+                              />
+                            ) : (
+                              <input 
+                                key="endTime-normal"
+                                name="endTime" 
+                                type="time" 
+                                defaultValue={editingItem?.endTime || "00:00"} 
+                                className="w-full p-2.5 text-center rounded-xl bg-transparent border border-border focus:border-primary outline-none transition-all" 
+                              />
+                            )}
                           </div>
                         </div>
                         
@@ -1152,7 +1075,7 @@ export default function App() {
                     )}
                   </>
                 ) : (
-                  (formCategory !== 'checklist' && formCategory !== 'responsavel') ? (
+                  (formCategory !== 'checklist') ? (
                     <div className="space-y-1">
                       <label className="block text-center text-sm font-medium text-foreground">
                         {formCategory === 'responsavel' ? 'Designação' : 'Orientação'}
@@ -1161,11 +1084,34 @@ export default function App() {
                         name="description" 
                         defaultValue={editingItem?.description || ""} 
                         rows={formCategory === 'orientacao' ? 4 : 2} 
-                        required
+                        required={formCategory === 'orientacao'}
                         className="w-full p-2.5 text-center rounded-xl bg-transparent border border-border focus:border-primary outline-none transition-all resize-none" 
                       />
                     </div>
                   ) : null
+                )}
+
+                {formType === 'task' && (
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-1">
+                      <label className="block text-center text-sm font-medium text-foreground">Início</label>
+                      <input 
+                        name="startTime" 
+                        type="time" 
+                        defaultValue={editingItem?.startTime || "18:45"} 
+                        className="w-full p-2.5 text-center rounded-xl bg-transparent border border-border focus:border-primary outline-none transition-all" 
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="block text-center text-sm font-medium text-foreground">Término</label>
+                      <input 
+                        name="endTime" 
+                        type="time" 
+                        defaultValue={editingItem?.endTime || "19:00"} 
+                        className="w-full p-2.5 text-center rounded-xl bg-transparent border border-border focus:border-primary outline-none transition-all" 
+                      />
+                    </div>
+                  </div>
                 )}
                 
                 <div className="pt-1 flex justify-center">
@@ -1235,14 +1181,15 @@ export default function App() {
                       }
                     }}
                     className={cn(
-                      "w-full bg-muted border rounded-2xl px-12 py-4 text-center text-lg tracking-widest italic focus:outline-none transition-all",
-                      authError ? "border-destructive ring-1 ring-destructive" : "border-border focus:border-primary/50"
+                      "w-full border-[0.5px] rounded-2xl px-12 py-4 text-center text-lg tracking-widest italic focus:outline-none transition-all text-[#00cc00]",
+                      darkMode ? "bg-[#262626]" : "bg-[#E2E2E2]",
+                      authError ? "border-destructive ring-1 ring-destructive" : (darkMode ? "border-[#F7F7F7]/30" : "border-[#121212]/30")
                     )}
                   />
                   <button 
                     type="button"
                     onClick={() => setShowAdminPassword(!showAdminPassword)}
-                    className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-primary transition-colors z-10"
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-[#00cc00] z-10"
                   >
                     {showAdminPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                   </button>
@@ -1287,16 +1234,16 @@ export default function App() {
               initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
               className="relative bg-card border border-border w-full max-w-sm rounded-[2rem] p-8 shadow-2xl text-center"
             >
-              <div className="w-16 h-16 bg-destructive/10 rounded-full flex items-center justify-center mx-auto mb-6">
+              <div className="flex items-center justify-center mx-auto mb-6">
                 <Trash className="w-8 h-8 text-destructive" />
               </div>
-              <h3 className="text-xl font-bold mb-8">Excluir Item</h3>
+              <h3 className="text-xl font-bold mb-8">EXCLUIR EVENTO?</h3>
               <div className="flex gap-3">
                 <button 
                   onClick={() => setIsDeleteConfirmOpen(false)}
                   className="flex-1 py-3 px-4 rounded-2xl bg-muted hover:bg-muted-foreground/10 font-bold transition-all"
                 >
-                  CANCELAR
+                  NÃO
                 </button>
                 <button 
                   onClick={() => {
@@ -1308,7 +1255,7 @@ export default function App() {
                   }}
                   className="flex-1 py-3 px-4 rounded-2xl bg-destructive text-destructive-foreground hover:opacity-90 font-bold shadow-lg shadow-destructive/20 transition-all"
                 >
-                  EXCLUIR
+                  SIM
                 </button>
               </div>
             </motion.div>

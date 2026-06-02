@@ -48,10 +48,10 @@
     --muted: #f4f4f5;
     --muted-foreground: #71717a;
 
-    --popover: #ffffff;
+    --popover: #e2e2e2ff;
     --popover-foreground: #121212ff;
 
-    --card: #ffffff;
+    --card: #e2e2e2ff;
     --card-foreground: #121212ff;
 
     --border: #e4e4e7;
@@ -80,10 +80,10 @@
     --muted: #1c1c1e;
     --muted-foreground: #98989f;
 
-    --popover: #1c1c1e;
+    --popover: #262626ff;
     --popover-foreground: #f7f7f7ff;
 
-    --card: #1c1c1e;
+    --card: #262626ff;
     --card-foreground: #f7f7f7ff;
 
     --border: #2c2c2e;
