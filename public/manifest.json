@@ -1,0 +1,16 @@
+{
+  "short_name": "Cronograma",
+  "name": "Cronograma Semeadores",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "type": "image/svg+xml",
+      "sizes": "any"
+    }
+  ],
+  "start_url": "/",
+  "background_color": "#121212",
+  "theme_color": "#00cc00",
+  "display": "standalone",
+  "orientation": "portrait"
+}
