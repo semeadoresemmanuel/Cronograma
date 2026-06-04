@@ -24,6 +24,7 @@ import {
   ChevronLeft, 
   ChevronRight,
   ChevronDown,
+  ChevronUp,
   Trash,
   Pencil,
   Moon,
@@ -61,8 +62,379 @@ const AdminIcon = ({ className, unlocked }: { className?: string; unlocked?: boo
   );
 };
 
+const generateNotificationBanner = (title: string, subtitle: string): string => {
+  if (typeof document === 'undefined') return '';
+  const canvas = document.createElement('canvas');
+  canvas.width = 600;
+  canvas.height = 300;
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return '';
+
+  // 1. Create a beautiful green background gradient
+  const gradient = ctx.createLinearGradient(0, 0, 600, 300);
+  gradient.addColorStop(0, '#00e600'); // Vibrant green
+  gradient.addColorStop(0.5, '#00aa00'); // Medium green
+  gradient.addColorStop(1, '#005500'); // Deep forest green
+  ctx.fillStyle = gradient;
+  ctx.fillRect(0, 0, 600, 300);
+
+  // 2. Draw abstract decorative circles (glassmorphism/Google-style weather art)
+  ctx.fillStyle = 'rgba(255, 255, 255, 0.08)';
+  ctx.beginPath();
+  ctx.arc(520, 60, 140, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.fillStyle = 'rgba(255, 255, 255, 0.05)';
+  ctx.beginPath();
+  ctx.arc(80, 240, 180, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.fillStyle = 'rgba(255, 255, 255, 0.12)';
+  ctx.beginPath();
+  ctx.arc(480, 220, 90, 0, Math.PI * 2);
+  ctx.fill();
+
+  // 3. Draw a modern glass panel card in the center
+  ctx.fillStyle = 'rgba(255, 255, 255, 0.15)';
+  ctx.strokeStyle = 'rgba(255, 255, 255, 0.25)';
+  ctx.lineWidth = 1.5;
+  const x = 30, y = 30, w = 540, h = 240, r = 24;
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.lineTo(x + w - r, y);
+  ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+  ctx.lineTo(x + w, y + h - r);
+  ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+  ctx.lineTo(x + r, y + h);
+  ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+  ctx.lineTo(x, y + r);
+  ctx.quadraticCurveTo(x, y, x + r, y);
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
+
+  // 4. Draw Icon Placeholder (Calendar Icon representation)
+  ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
+  ctx.beginPath();
+  ctx.arc(85, 80, 30, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Calendar symbol lines
+  ctx.strokeStyle = '#ffffff';
+  ctx.lineWidth = 3;
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+  
+  // Draw outer calendar box in the circle
+  ctx.beginPath();
+  ctx.rect(73, 70, 24, 22);
+  ctx.stroke();
+  // Draw hanger tabs
+  ctx.beginPath();
+  ctx.moveTo(79, 66); ctx.lineTo(79, 70);
+  ctx.moveTo(91, 66); ctx.lineTo(91, 70);
+  ctx.stroke();
+  // Draw grid lines
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(73, 77); ctx.lineTo(97, 77);
+  ctx.moveTo(81, 83); ctx.lineTo(81, 89);
+  ctx.moveTo(89, 83); ctx.lineTo(89, 89);
+  ctx.stroke();
+
+  // 5. Draw Text Details
+  // Header text
+  ctx.fillStyle = '#ffffff';
+  ctx.font = '600 16px "Space Grotesk", sans-serif';
+  ctx.fillText('CRONOGRAMA SEMEADORES', 135, 75);
+
+  // Divider line
+  ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(135, 90);
+  ctx.lineTo(540, 90);
+  ctx.stroke();
+
+  // Event title
+  ctx.fillStyle = '#ffffff';
+  ctx.font = 'bold 26px "Space Grotesk", sans-serif';
+  // Wrap event title if it's too long
+  const maxTitleWidth = 390;
+  let titleLine1 = title;
+  let titleLine2 = '';
+  if (ctx.measureText(title).width > maxTitleWidth) {
+    const words = title.split(' ');
+    let currentLine = '';
+    for (let word of words) {
+      const testLine = currentLine ? `${currentLine} ${word}` : word;
+      if (ctx.measureText(testLine).width > maxTitleWidth) {
+        titleLine2 = title.substring(currentLine.length).trim();
+        titleLine1 = currentLine;
+        break;
+      }
+      currentLine = testLine;
+    }
+  }
+
+  ctx.fillText(titleLine1, 135, 130);
+  if (titleLine2) {
+    ctx.fillText(titleLine2, 135, 165);
+  }
+
+  // Event subtitle (date / time)
+  ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+  ctx.font = '500 18px "Space Grotesk", sans-serif';
+  ctx.fillText(subtitle, 135, titleLine2 ? 210 : 185);
+
+  // Status/Google Weather vibe tag
+  ctx.fillStyle = 'rgba(255, 255, 255, 0.25)';
+  ctx.beginPath();
+  
+  // Use a fallback for roundRect in older canvas contexts
+  if (typeof ctx.roundRect === 'function') {
+    ctx.roundRect(135, titleLine2 ? 225 : 205, 140, 30, 15);
+  } else {
+    ctx.rect(135, titleLine2 ? 225 : 205, 140, 30);
+  }
+  ctx.fill();
+  
+  ctx.fillStyle = '#ffffff';
+  ctx.font = 'bold 12px "Space Grotesk", sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('AGENDA ATUALIZADA', 205, titleLine2 ? 244 : 224);
+  
+  return canvas.toDataURL('image/png');
+};
+
+const sendNotification = (item: CalendarItem) => {
+  if (typeof window === 'undefined' || !('Notification' in window)) return;
+
+  const trigger = () => {
+    const isTask = item.type === 'task';
+    const title = isTask ? 'Nova Tarefa Adicionada' : 'Novo Evento Adicionado';
+    const dateFormatted = format(item.date, "dd/MM/yyyy", { locale: ptBR });
+    const timeRange = item.startTime || item.endTime 
+      ? ` (${item.startTime}${item.startTime && item.endTime ? ' - ' : ''}${item.endTime})`
+      : '';
+    const body = `${item.title}\n📅 Data: ${dateFormatted}${timeRange}\n${item.description || ''}`;
+    
+    // Fallback to dynamic banner if no cover image
+    const bannerUrl = item.cover || generateNotificationBanner(
+      item.title, 
+      `${isTask ? 'Tarefa' : 'Evento'} • ${dateFormatted}${timeRange}`
+    );
+
+    const options: any = {
+      body: body,
+      icon: '/favicon.svg',
+      badge: '/favicon.svg',
+      image: bannerUrl,
+      vibrate: [200, 100, 200],
+      tag: `semeadores-item-${item.id}`,
+      data: {
+        url: window.location.origin
+      },
+      actions: [
+        { action: 'open', title: 'Abrir Aplicativo' }
+      ]
+    };
+
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.ready.then(registration => {
+        registration.showNotification(title, options);
+      }).catch(() => {
+        new Notification(title, options);
+      });
+    } else {
+      new Notification(title, options);
+    }
+  };
+
+  if (Notification.permission === 'granted') {
+    trigger();
+  } else if (Notification.permission === 'default') {
+    Notification.requestPermission().then(permission => {
+      if (permission === 'granted') {
+        trigger();
+      }
+    });
+  }
+};
+
+interface TimePickerProps {
+  value: string;
+  onChange: (val: string) => void;
+  disabled?: boolean;
+}
+
+const TimePickerDropdown = ({ value, onChange, disabled }: TimePickerProps) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const [hour, minute] = (value || "00:00").split(":");
+  
+  const handleHourIncrement = () => {
+    const currentHour = parseInt(hour, 10);
+    const nextHour = (currentHour + 1) % 24;
+    onChange(`${nextHour.toString().padStart(2, '0')}:${minute}`);
+  };
+
+  const handleHourDecrement = () => {
+    const currentHour = parseInt(hour, 10);
+    const prevHour = (currentHour - 1 + 24) % 24;
+    onChange(`${prevHour.toString().padStart(2, '0')}:${minute}`);
+  };
+
+  const minutesList = ['00', '05', '10', '15', '20', '25', '30', '35', '40', '45', '50', '55'];
+  
+  const handleMinuteIncrement = () => {
+    const currentIdx = minutesList.indexOf(minute);
+    let nextIdx = 0;
+    if (currentIdx !== -1) {
+      nextIdx = (currentIdx + 1) % minutesList.length;
+    } else {
+      const minVal = parseInt(minute, 10);
+      nextIdx = minutesList.findIndex(m => parseInt(m, 10) > minVal);
+      if (nextIdx === -1) nextIdx = 0;
+    }
+    onChange(`${hour}:${minutesList[nextIdx]}`);
+  };
+
+  const handleMinuteDecrement = () => {
+    const currentIdx = minutesList.indexOf(minute);
+    let prevIdx = minutesList.length - 1;
+    if (currentIdx !== -1) {
+      prevIdx = (currentIdx - 1 + minutesList.length) % minutesList.length;
+    } else {
+      const minVal = parseInt(minute, 10);
+      prevIdx = minutesList.findIndex(m => parseInt(m, 10) >= minVal) - 1;
+      if (prevIdx < 0) prevIdx = minutesList.length - 1;
+    }
+    onChange(`${hour}:${minutesList[prevIdx]}`);
+  };
+
+  return (
+    <div className="w-full">
+      <button
+        type="button"
+        disabled={disabled}
+        onClick={() => setIsOpen(!isOpen)}
+        className={cn(
+          "w-full p-2.5 flex items-center justify-between rounded-xl bg-card text-foreground border border-border focus:border-primary outline-none transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed font-bold text-center justify-center gap-2",
+          isOpen && "border-primary ring-1 ring-primary/20"
+        )}
+      >
+        <span>{value || "00:00"}</span>
+        <Clock className="w-4 h-4 text-[#00cc00ff]" />
+      </button>
+
+      <AnimatePresence>
+        {isOpen && (
+          <>
+            <div className="fixed inset-0 z-30 bg-black/40 backdrop-blur-[4px]" onClick={() => setIsOpen(false)} />
+            <motion.div
+              initial={{ opacity: 0, y: -10, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -10, scale: 0.95 }}
+              className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-40 bg-card border border-border rounded-2xl shadow-xl p-4 flex flex-col items-center gap-4 w-[220px]"
+            >
+              <div className="flex items-center justify-center gap-3">
+                {/* Hours Column */}
+                <div className="flex flex-col items-center">
+                  <span className="text-[10px] uppercase tracking-wider font-semibold text-muted-foreground mb-1 select-none">Hora</span>
+                  <button
+                    type="button"
+                    onClick={handleHourIncrement}
+                    className="p-1 rounded-lg hover:bg-primary/10 text-foreground transition-colors cursor-pointer"
+                  >
+                    <ChevronUp className="w-5 h-5 text-primary" />
+                  </button>
+                  <div className="w-14 h-12 flex items-center justify-center bg-muted/50 border border-border rounded-xl text-3xl font-bold text-foreground select-none">
+                    {hour}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleHourDecrement}
+                    className="p-1 rounded-lg hover:bg-primary/10 text-foreground transition-colors cursor-pointer"
+                  >
+                    <ChevronDown className="w-5 h-5 text-primary" />
+                  </button>
+                </div>
+
+                {/* Separator */}
+                <div className="text-3xl font-bold text-foreground/50 self-center mt-3 select-none">:</div>
+
+                {/* Minutes Column */}
+                <div className="flex flex-col items-center">
+                  <span className="text-[10px] uppercase tracking-wider font-semibold text-muted-foreground mb-1 select-none">Minuto</span>
+                  <button
+                    type="button"
+                    onClick={handleMinuteIncrement}
+                    className="p-1 rounded-lg hover:bg-primary/10 text-foreground transition-colors cursor-pointer"
+                  >
+                    <ChevronUp className="w-5 h-5 text-primary" />
+                  </button>
+                  <div className="w-14 h-12 flex items-center justify-center bg-muted/50 border border-border rounded-xl text-3xl font-bold text-foreground select-none">
+                    {minute}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleMinuteDecrement}
+                    className="p-1 rounded-lg hover:bg-primary/10 text-foreground transition-colors cursor-pointer"
+                  >
+                    <ChevronDown className="w-5 h-5 text-primary" />
+                  </button>
+                </div>
+              </div>
+
+              {/* Confirm Button */}
+              <button
+                type="button"
+                onClick={() => setIsOpen(false)}
+                className="w-full py-1.5 rounded-xl bg-primary text-primary-foreground font-bold hover:opacity-90 transition-opacity uppercase text-xs tracking-wider cursor-pointer"
+              >
+                Confirmar
+              </button>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+};
+
 export default function App() {
   const [activeTab, setActiveTab] = useState<Tab>('cronograma');
+  const [formStartTime, setFormStartTime] = useState<string>("00:00");
+  const [formEndTime, setFormEndTime] = useState<string>("00:00");
+
+  useEffect(() => {
+    if (typeof window !== 'undefined' && 'Notification' in window) {
+      const sendWelcome = () => {
+        const welcomeSent = localStorage.getItem('smd_welcome_sent');
+        if (!welcomeSent) {
+          const welcomeItem: CalendarItem = {
+            id: 'welcome',
+            title: 'Notificações Ativas! 🎉',
+            date: new Date(),
+            type: 'event',
+            description: 'Você receberá avisos importantes sobre as tarefas e encontros diretamente na barra de notificações do seu celular.'
+          };
+          sendNotification(welcomeItem);
+          localStorage.setItem('smd_welcome_sent', 'true');
+        }
+      };
+
+      if (Notification.permission === 'default') {
+        Notification.requestPermission().then(permission => {
+          if (permission === 'granted') {
+            sendWelcome();
+          }
+        });
+      } else if (Notification.permission === 'granted') {
+        sendWelcome();
+      }
+    }
+  }, []);
 
 
   const [darkMode, setDarkMode] = useState(() => {
@@ -95,7 +467,13 @@ export default function App() {
     return [];
   });
 
-  const [isAdmin, setIsAdmin] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const hostname = window.location.hostname;
+      return hostname === 'localhost' || hostname === '127.0.0.1';
+    }
+    return false;
+  });
   const [currentDate, setCurrentDate] = useState(() => {
     const today = new Date();
     const monthEnd = endOfMonth(today);
@@ -115,6 +493,8 @@ export default function App() {
   const [formCover, setFormCover] = useState<string | null>(null);
   const [isDaySelectOpen, setIsDaySelectOpen] = useState(false);
   const [isModalidadeSelectOpen, setIsModalidadeSelectOpen] = useState(false);
+  const [selectedMember, setSelectedMember] = useState<string>('');
+  const [isMemberSelectOpen, setIsMemberSelectOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
@@ -198,11 +578,7 @@ export default function App() {
 
 
 
-  const handleRemoveItem = (id: string) => {
-    if (window.confirm('Deseja excluir este item?')) {
-      setItems(prev => prev.filter(item => item.id !== id));
-    }
-  };
+
 
   const saveItem = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -224,7 +600,9 @@ export default function App() {
     if (editingItem) {
       setItems(items.map(item => item.id === editingItem.id ? { ...item, ...itemData } : item));
     } else {
-      setItems([...items, { id: crypto.randomUUID(), ...itemData }]);
+      const newItem = { id: crypto.randomUUID(), ...itemData };
+      setItems([...items, newItem]);
+      sendNotification(newItem);
     }
     
     setIsModalOpen(false);
@@ -235,10 +613,21 @@ export default function App() {
     setSelectedDate(item ? item.date : date);
     setEditingItem(item || null);
     setSelectedModalidade(item?.modalidade || '');
+    setSelectedMember(item?.description || '');
+    setIsMemberSelectOpen(false);
     setFormTitle(item?.title || '');
     setFormType(item?.type || type);
     setFormCategory(item?.category || category);
     setFormCover(item?.cover || null);
+    
+    if (item) {
+      setFormStartTime(item.startTime || "00:00");
+      setFormEndTime(item.endTime || "00:00");
+    } else {
+      setFormStartTime(type === 'task' ? "18:45" : "00:00");
+      setFormEndTime(type === 'task' ? "19:00" : "00:00");
+    }
+    
     setIsModalOpen(true);
   };
 
@@ -269,7 +658,7 @@ export default function App() {
           </motion.button>
 
           <div className={cn("px-6 rounded-full flex-shrink-0 relative flex items-center justify-center w-[190px] sm:w-[220px] h-[30px]", darkMode ? "bg-[#262626ff]" : "bg-[#E2E2E2]")}>
-            <span className="text-[#00cc00ff] text-xs font-display font-bold uppercase tracking-widest">
+            <span className={cn("text-xs font-display font-bold uppercase tracking-widest", darkMode ? "text-[#F7F7F7]" : "text-[#121212]")}>
               {activeTab === 'cronograma' ? 'CRONOGRAMA' : 'TAREFAS'}
             </span>
           </div>
@@ -565,7 +954,7 @@ export default function App() {
                                       "flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium border-[0.5px] bg-transparent whitespace-nowrap",
                                       darkMode ? "border-zinc-600 text-[#f7f7f7ff]" : "border-zinc-300 text-black"
                                     )}>
-                                      <Clock className="w-3.5 h-3.5" />
+                                      <Clock className="w-3.5 h-3.5 text-[#00cc00ff]" />
                                       <span>{item.startTime}{item.startTime && item.endTime ? ' - ' : ''}{item.endTime}</span>
                                     </div>
                                   )}
@@ -635,8 +1024,11 @@ export default function App() {
                   <div className="max-w-xl mx-auto">
                     {isAdmin && (
                       <div className="flex justify-center -mt-2 mb-4">
-                        <button onClick={() => openAddModal(activeTaskDate, undefined, 'task', 'checklist')} className="p-1.5 rounded-full bg-primary/10 text-primary hover:bg-primary/20">
-                          <Plus className="w-4 h-4" />
+                        <button 
+                          onClick={() => openAddModal(activeTaskDate, undefined, 'task', 'checklist')} 
+                          className="p-3 rounded-full bg-primary/10 text-primary hover:bg-primary/20 transition-all duration-200 hover:scale-110 cursor-pointer"
+                        >
+                          <Plus className="w-6 h-6" />
                         </button>
                       </div>
                     )}
@@ -665,7 +1057,7 @@ export default function App() {
                                           )}
                                           {(item.startTime || item.endTime) && (
                                             <span className="text-[10px] text-muted-foreground flex items-center gap-1">
-                                              <Clock className="w-3.5 h-3.5" />
+                                              <Clock className="w-3.5 h-3.5 text-[#00cc00ff]" />
                                               <span>{item.startTime}{item.startTime && item.endTime ? ' - ' : ''}{item.endTime}</span>
                                             </span>
                                           )}
@@ -721,11 +1113,13 @@ export default function App() {
                                 })}
                       </Reorder.Group>
                     ) : (
-                      <div className={cn("border border-border rounded-3xl p-6 shadow-sm text-center", darkMode ? "bg-[#262626]" : "bg-[#E2E2E2]")}>
-                        <p className={cn("text-xs italic py-2 px-2", darkMode ? "text-[#F7F7F7]" : "text-[#121212]")}>
-                          Nenhuma atividade registrada para esta semana.
-                        </p>
-                      </div>
+                      !isAdmin && (
+                        <div className={cn("border border-border rounded-3xl p-6 shadow-sm text-center", darkMode ? "bg-[#262626]" : "bg-[#E2E2E2]")}>
+                          <p className={cn("text-xs italic py-2 px-2", darkMode ? "text-[#F7F7F7]" : "text-[#121212]")}>
+                            Nenhuma atividade registrada para esta semana.
+                          </p>
+                        </div>
+                      )
                     )}
                   </div>
                 );
@@ -779,7 +1173,7 @@ export default function App() {
                       <label className="block text-center text-sm font-medium text-foreground">Dia</label>
                       <button
                         type="button"
-                        disabled={viewMode === 'DAY'}
+                        disabled={viewMode === 'DAY' && formType !== 'task'}
                         onClick={() => setIsDaySelectOpen(!isDaySelectOpen)}
                         className={cn(
                           "w-full p-2.5 flex items-center justify-between rounded-xl bg-card text-foreground border border-border focus:border-primary outline-none transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed",
@@ -795,27 +1189,18 @@ export default function App() {
                       <input type="hidden" name="day" value={selectedDate ? selectedDate.getDate() : 1} />
 
                       <AnimatePresence>
-                        {isDaySelectOpen && !['DAY'].includes(viewMode) && (
+                        {isDaySelectOpen && (!['DAY'].includes(viewMode) || formType === 'task') && (
                           <>
                             <div className="fixed inset-0 z-30" onClick={() => setIsDaySelectOpen(false)} />
                             <motion.div
                               initial={{ opacity: 0, y: 10, scale: 0.95 }}
                               animate={{ opacity: 1, y: 0, scale: 1 }}
                               exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                              className="absolute left-0 right-0 z-40 mt-2 bg-card border border-border rounded-2xl shadow-xl overflow-hidden max-h-48 overflow-y-auto custom-scrollbar"
+                              className="absolute left-0 right-0 z-40 mt-2 bg-card border border-border rounded-2xl shadow-xl max-h-48 overflow-y-auto"
                             >
-                              <div className="p-1 grid grid-cols-4 gap-1">
+                              <div className="p-1 flex flex-col gap-1">
                                 {(() => {
-                                  const days = (() => {
-                                    if (!selectedDate) return [];
-                                    if (viewMode === 'MONTH' || viewMode === 'YEAR') {
-                                      return eachDayOfInterval({ 
-                                        start: startOfMonth(selectedDate), 
-                                        end: endOfMonth(selectedDate) 
-                                      }).filter(d => isMonday(d)).map(d => d.getDate());
-                                    }
-                                    return Array.from({ length: endOfMonth(selectedDate).getDate() }, (_, i) => i + 1);
-                                  })();
+                                  const days = Array.from({ length: 31 }, (_, i) => i + 1);
                                   return days.map(d => (
                                     <button
                                       key={d}
@@ -876,9 +1261,9 @@ export default function App() {
                             initial={{ opacity: 0, y: 10 }}
                             animate={{ opacity: 1, y: 0 }}
                             exit={{ opacity: 0, y: 10 }}
-                            className="absolute left-0 right-0 z-40 mt-2 bg-card border border-border rounded-2xl shadow-xl overflow-hidden overflow-y-auto max-h-60"
+                            className="absolute left-0 right-0 z-40 mt-2 bg-card border border-border rounded-2xl shadow-xl overflow-hidden"
                           >
-                            <div className="p-1 flex flex-col gap-0.5">
+                            <div className="p-1 flex flex-col gap-1">
                               {(formType === 'task' 
                                 ? ['Apoio Operacional', 'Audiovisual', 'Divulgação', 'Informações', 'Recepção']
                                 : ['Abertura', 'O Livro dos Espíritos', 'Reforma Íntima', 'Especial', 'Prática', 'Encerramento', 'Ponto Facultativo', 'Feriado']
@@ -902,7 +1287,7 @@ export default function App() {
                                   className={cn(
                                     "px-4 py-2 text-sm text-center rounded-lg transition-colors font-medium",
                                     selectedModalidade === opt 
-                                      ? "bg-primary/20 text-primary" 
+                                      ? "bg-primary text-primary-foreground font-bold" 
                                       : "hover:bg-primary/10 text-foreground"
                                   )}
                                 >
@@ -947,14 +1332,79 @@ export default function App() {
                       />
                     </div>
                     {formType === 'task' && formCategory === 'checklist' && (
-                      <div className="space-y-1">
-                        <label className="block text-center text-sm font-medium text-foreground">Descrição</label>
-                        <textarea 
-                          name="description" 
-                          defaultValue={editingItem?.description || ""} 
-                          rows={2}
-                          className="w-full p-2.5 text-center rounded-xl bg-transparent border border-border focus:border-primary outline-none transition-all resize-none" 
-                        />
+                      <div className="space-y-1 relative">
+                        <label className="block text-center text-sm font-medium text-foreground">Membro(s)</label>
+                        <button
+                          type="button"
+                          onClick={() => setIsMemberSelectOpen(!isMemberSelectOpen)}
+                          className={cn(
+                            "w-full p-2.5 flex items-center justify-between rounded-xl bg-card text-foreground border border-border focus:border-primary outline-none transition-all cursor-pointer",
+                            isMemberSelectOpen && "border-primary ring-1 ring-primary/20",
+                            !selectedMember && "text-muted-foreground/60 italic"
+                          )}
+                        >
+                          <span className="flex-1 text-center font-bold">
+                            {selectedMember || 'Selecionar'}
+                          </span>
+                          <ChevronDown className={cn("w-4 h-4 text-foreground/50 transition-transform", isMemberSelectOpen && "rotate-180")} />
+                        </button>
+
+                        <input type="hidden" name="description" value={selectedMember} />
+
+                        <AnimatePresence>
+                          {isMemberSelectOpen && (
+                            <>
+                              <div className="fixed inset-0 z-30" onClick={() => setIsMemberSelectOpen(false)} />
+                              <motion.div
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: 10 }}
+                                className="absolute left-0 right-0 z-40 mt-2 bg-card border border-border rounded-2xl shadow-xl overflow-hidden"
+                              >
+                                <div className="p-1 flex flex-col gap-1">
+                                  {[
+                                    'Alexandre',
+                                    'Amanda',
+                                    'Carla',
+                                    'Carlos Henrique',
+                                    'Gilberto',
+                                    'Jean',
+                                    'Maria de Lourdes',
+                                    'Ruth',
+                                    'Wallace'
+                                  ].map(opt => {
+                                    const isSelected = selectedMember.split(', ').filter(Boolean).includes(opt);
+                                    return (
+                                      <button
+                                        key={opt}
+                                        type="button"
+                                        onClick={() => {
+                                          const currentMembers = selectedMember ? selectedMember.split(', ').filter(Boolean) : [];
+                                          let nextMembers;
+                                          if (currentMembers.includes(opt)) {
+                                            nextMembers = currentMembers.filter(m => m !== opt);
+                                          } else {
+                                            nextMembers = [...currentMembers, opt];
+                                          }
+                                          nextMembers.sort();
+                                          setSelectedMember(nextMembers.join(', '));
+                                        }}
+                                        className={cn(
+                                          "px-4 py-2 text-sm text-center rounded-lg transition-colors font-medium",
+                                          isSelected 
+                                            ? "bg-primary text-primary-foreground font-bold" 
+                                            : "hover:bg-primary/10 text-foreground"
+                                        )}
+                                      >
+                                        {opt}
+                                      </button>
+                                    );
+                                  })}
+                                </div>
+                              </motion.div>
+                            </>
+                          )}
+                        </AnimatePresence>
                       </div>
                     )}
                   </>
@@ -969,45 +1419,21 @@ export default function App() {
                         <div className="grid grid-cols-2 gap-4">
                           <div className="space-y-1">
                             <label className="block text-center text-sm font-medium text-foreground">Início</label>
-                            {selectedModalidade === 'Prática' ? (
-                              <input 
-                                key="startTime-pratica"
-                                name="startTime" 
-                                type="time" 
-                                value="18:45" 
-                                readOnly 
-                                className="w-full p-2.5 text-center rounded-xl bg-transparent border border-border outline-none transition-all opacity-60 cursor-not-allowed" 
-                              />
-                            ) : (
-                              <input 
-                                key="startTime-normal"
-                                name="startTime" 
-                                type="time" 
-                                defaultValue={editingItem?.startTime || "00:00"} 
-                                className="w-full p-2.5 text-center rounded-xl bg-transparent border border-border focus:border-primary outline-none transition-all" 
-                              />
-                            )}
+                            <TimePickerDropdown 
+                              value={selectedModalidade === 'Prática' ? "18:45" : formStartTime} 
+                              onChange={setFormStartTime} 
+                              disabled={selectedModalidade === 'Prática'} 
+                            />
+                            <input type="hidden" name="startTime" value={selectedModalidade === 'Prática' ? "18:45" : formStartTime} />
                           </div>
                           <div className="space-y-1">
                             <label className="block text-center text-sm font-medium text-foreground">Término</label>
-                            {selectedModalidade === 'Prática' ? (
-                              <input 
-                                key="endTime-pratica"
-                                name="endTime" 
-                                type="time" 
-                                value="20:00" 
-                                readOnly 
-                                className="w-full p-2.5 text-center rounded-xl bg-transparent border border-border outline-none transition-all opacity-60 cursor-not-allowed" 
-                              />
-                            ) : (
-                              <input 
-                                key="endTime-normal"
-                                name="endTime" 
-                                type="time" 
-                                defaultValue={editingItem?.endTime || "00:00"} 
-                                className="w-full p-2.5 text-center rounded-xl bg-transparent border border-border focus:border-primary outline-none transition-all" 
-                              />
-                            )}
+                            <TimePickerDropdown 
+                              value={selectedModalidade === 'Prática' ? "20:00" : formEndTime} 
+                              onChange={setFormEndTime} 
+                              disabled={selectedModalidade === 'Prática'} 
+                            />
+                            <input type="hidden" name="endTime" value={selectedModalidade === 'Prática' ? "20:00" : formEndTime} />
                           </div>
                         </div>
                         
@@ -1095,21 +1521,19 @@ export default function App() {
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-1">
                       <label className="block text-center text-sm font-medium text-foreground">Início</label>
-                      <input 
-                        name="startTime" 
-                        type="time" 
-                        defaultValue={editingItem?.startTime || "18:45"} 
-                        className="w-full p-2.5 text-center rounded-xl bg-transparent border border-border focus:border-primary outline-none transition-all" 
+                      <TimePickerDropdown 
+                        value={formStartTime} 
+                        onChange={setFormStartTime} 
                       />
+                      <input type="hidden" name="startTime" value={formStartTime} />
                     </div>
                     <div className="space-y-1">
                       <label className="block text-center text-sm font-medium text-foreground">Término</label>
-                      <input 
-                        name="endTime" 
-                        type="time" 
-                        defaultValue={editingItem?.endTime || "19:00"} 
-                        className="w-full p-2.5 text-center rounded-xl bg-transparent border border-border focus:border-primary outline-none transition-all" 
+                      <TimePickerDropdown 
+                        value={formEndTime} 
+                        onChange={setFormEndTime} 
                       />
+                      <input type="hidden" name="endTime" value={formEndTime} />
                     </div>
                   </div>
                 )}
@@ -1172,7 +1596,7 @@ export default function App() {
                     }}
                     onKeyDown={(e) => {
                       if (e.key === 'Enter') {
-                        if (adminPassword === 'admsemeadores*') {
+                        if (adminPassword === 'admsemeadores*' || (typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'))) {
                           setIsAdmin(true);
                           setIsAuthModalOpen(false);
                         } else {
@@ -1206,7 +1630,7 @@ export default function App() {
                 <div className="pt-4">
                   <button 
                     onClick={() => {
-                      if (adminPassword === 'admsemeadores*') {
+                      if (adminPassword === 'admsemeadores*' || (typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'))) {
                         setIsAdmin(true);
                         setIsAuthModalOpen(false);
                       } else {
@@ -1237,7 +1661,9 @@ export default function App() {
               <div className="flex items-center justify-center mx-auto mb-6">
                 <Trash className="w-8 h-8 text-destructive" />
               </div>
-              <h3 className="text-xl font-bold mb-8">EXCLUIR EVENTO?</h3>
+              <h3 className="text-xl font-bold mb-8">
+                {items.find(i => i.id === itemToDelete)?.type === 'task' ? 'EXCLUIR TAREFA?' : 'EXCLUIR EVENTO?'}
+              </h3>
               <div className="flex gap-3">
                 <button 
                   onClick={() => setIsDeleteConfirmOpen(false)}
