@@ -1114,8 +1114,8 @@ export default function App() {
                       </Reorder.Group>
                     ) : (
                       !isAdmin && (
-                        <div className={cn("border border-border rounded-3xl p-6 shadow-sm text-center", darkMode ? "bg-[#262626]" : "bg-[#E2E2E2]")}>
-                          <p className={cn("text-xs italic py-2 px-2", darkMode ? "text-[#F7F7F7]" : "text-[#121212]")}>
+                        <div className={cn("border border-border rounded-3xl p-4 sm:p-6 shadow-sm text-center", darkMode ? "bg-[#262626]" : "bg-[#E2E2E2]")}>
+                          <p className={cn("text-[10px] sm:text-xs italic py-2 px-1 sm:px-2 whitespace-nowrap", darkMode ? "text-[#F7F7F7]" : "text-[#121212]")}>
                             Nenhuma atividade registrada para esta semana.
                           </p>
                         </div>
