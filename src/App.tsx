@@ -31,7 +31,6 @@ import {
   Sun,
   X,
   Upload,
-  Check,
   Eye,
   EyeOff,
   Download
@@ -262,6 +261,40 @@ const sendNotification = (item: CalendarItem) => {
   }
 };
 
+const getModalidadeColor = (modalidade?: string): string => {
+  switch (modalidade) {
+    case 'Abertura':
+    case 'Encerramento':
+      return '#CAD100ff'; // Amarelo Dourado (#CAD100)
+    case 'O Livro dos Espíritos':
+      return '#00CC00ff'; // Verde
+    case 'Reforma Íntima':
+      return '#FF69B4ff'; // Rosa
+    case 'Especial':
+      return '#9400D3ff'; // Roxo
+    case 'Prática':
+      return '#1E90FFff'; // Azul
+    case 'Ponto Facultativo':
+      return '#FF8C00ff'; // Laranja
+    case 'Feriado':
+      return '#FF0000ff'; // Vermelho
+    default:
+      return '#00CC00ff'; // Default is green
+  }
+};
+
+const isLocalhost = (hostname: string): boolean => {
+  return (
+    hostname === 'localhost' ||
+    hostname === '127.0.0.1' ||
+    hostname === '::1' ||
+    hostname.startsWith('192.168.') ||
+    hostname.startsWith('10.') ||
+    hostname.startsWith('172.') ||
+    hostname.endsWith('.local')
+  );
+};
+
 interface TimePickerProps {
   value: string;
   onChange: (val: string) => void;
@@ -272,6 +305,55 @@ const TimePickerDropdown = ({ value, onChange, disabled }: TimePickerProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const [hour, minute] = (value || "00:00").split(":");
   
+  const [tempHour, setTempHour] = useState(hour);
+  const [tempMinute, setTempMinute] = useState(minute);
+
+  useEffect(() => {
+    setTempHour(hour);
+  }, [hour]);
+
+  useEffect(() => {
+    setTempMinute(minute);
+  }, [minute]);
+
+  const handleHourChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value.replace(/\D/g, '').slice(0, 2);
+    setTempHour(val);
+    const num = parseInt(val, 10);
+    if (!isNaN(num) && num >= 0 && num <= 23) {
+      onChange(`${num.toString().padStart(2, '0')}:${minute}`);
+    }
+  };
+
+  const handleHourBlur = () => {
+    let num = parseInt(tempHour, 10);
+    if (isNaN(num) || num < 0 || num > 23) {
+      num = 0;
+    }
+    const formatted = num.toString().padStart(2, '0');
+    setTempHour(formatted);
+    onChange(`${formatted}:${minute}`);
+  };
+
+  const handleMinuteChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value.replace(/\D/g, '').slice(0, 2);
+    setTempMinute(val);
+    const num = parseInt(val, 10);
+    if (!isNaN(num) && num >= 0 && num <= 59) {
+      onChange(`${hour}:${num.toString().padStart(2, '0')}`);
+    }
+  };
+
+  const handleMinuteBlur = () => {
+    let num = parseInt(tempMinute, 10);
+    if (isNaN(num) || num < 0 || num > 59) {
+      num = 0;
+    }
+    const formatted = num.toString().padStart(2, '0');
+    setTempMinute(formatted);
+    onChange(`${hour}:${formatted}`);
+  };
+
   const handleHourIncrement = () => {
     const currentHour = parseInt(hour, 10);
     const nextHour = (currentHour + 1) % 24;
@@ -348,9 +430,16 @@ const TimePickerDropdown = ({ value, onChange, disabled }: TimePickerProps) => {
                   >
                     <ChevronUp className="w-5 h-5 text-primary" />
                   </button>
-                  <div className="w-14 h-12 flex items-center justify-center bg-muted/50 border border-border rounded-xl text-3xl font-bold text-foreground select-none">
-                    {hour}
-                  </div>
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    pattern="[0-9]*"
+                    value={tempHour}
+                    onChange={handleHourChange}
+                    onBlur={handleHourBlur}
+                    onFocus={(e) => e.target.select()}
+                    className="w-14 h-12 text-center bg-muted/50 border border-border rounded-xl text-3xl font-bold text-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"
+                  />
                   <button
                     type="button"
                     onClick={handleHourDecrement}
@@ -373,9 +462,16 @@ const TimePickerDropdown = ({ value, onChange, disabled }: TimePickerProps) => {
                   >
                     <ChevronUp className="w-5 h-5 text-primary" />
                   </button>
-                  <div className="w-14 h-12 flex items-center justify-center bg-muted/50 border border-border rounded-xl text-3xl font-bold text-foreground select-none">
-                    {minute}
-                  </div>
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    pattern="[0-9]*"
+                    value={tempMinute}
+                    onChange={handleMinuteChange}
+                    onBlur={handleMinuteBlur}
+                    onFocus={(e) => e.target.select()}
+                    className="w-14 h-12 text-center bg-muted/50 border border-border rounded-xl text-3xl font-bold text-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"
+                  />
                   <button
                     type="button"
                     onClick={handleMinuteDecrement}
@@ -448,8 +544,6 @@ export default function App() {
   });
 
   const [selectedMonthInYearView, setSelectedMonthInYearView] = useState<Date | null>(null);
-  const [selectedTaskMonth, setSelectedTaskMonth] = useState<Date | null>(null);
-  const [selectedTaskWeek, setSelectedTaskWeek] = useState<Date | null>(null);
 
 
 
@@ -469,8 +563,7 @@ export default function App() {
 
   const [isAdmin, setIsAdmin] = useState(() => {
     if (typeof window !== 'undefined') {
-      const hostname = window.location.hostname;
-      return hostname === 'localhost' || hostname === '127.0.0.1';
+      return isLocalhost(window.location.hostname);
     }
     return false;
   });
@@ -514,9 +607,7 @@ export default function App() {
     });
   };
 
-  const handleToggleTask = (id: string) => {
-    setItems(items.map(item => item.id === id ? { ...item, completed: !item.completed } : item));
-  };
+
 
   useEffect(() => { 
     localStorage.setItem('smd_theme', JSON.stringify(darkMode)); 
@@ -592,7 +683,7 @@ export default function App() {
       endTime: (formData.get('endTime') as string) || "",
       description: (formData.get('description') as string) || "",
       modalidade: formData.get('modalidade') as string,
-      cover: formCover || undefined,
+      cover: ['Ponto Facultativo', 'Feriado'].includes(formData.get('modalidade') as string) ? undefined : (formCover || undefined),
       completed: editingItem ? editingItem.completed : false,
       order: editingItem?.order ?? Date.now()
     };
@@ -658,7 +749,7 @@ export default function App() {
           </motion.button>
 
           <div className={cn("px-6 rounded-full flex-shrink-0 relative flex items-center justify-center w-[190px] sm:w-[220px] h-[30px]", darkMode ? "bg-[#262626ff]" : "bg-[#E2E2E2]")}>
-            <span className={cn("text-xs font-display font-bold uppercase tracking-widest", darkMode ? "text-[#F7F7F7]" : "text-[#121212]")}>
+            <span className="text-xs font-display font-bold uppercase tracking-widest text-[#00cc00ff]">
               {activeTab === 'cronograma' ? 'CRONOGRAMA' : 'TAREFAS'}
             </span>
           </div>
@@ -680,9 +771,9 @@ export default function App() {
               style={{ boxShadow: '0 2px 6px rgba(0,0,0,0.15)' }}
             >
               {darkMode ? (
-                <Moon strokeWidth={3} className="w-[14px] h-[14px] text-[#00cc00ff]" />
+                <Moon strokeWidth={3} className="w-[14px] h-[14px] text-[#00cc00ff]" fill="currentColor" />
               ) : (
-                <Sun strokeWidth={3} className="w-[14px] h-[14px] text-[#00cc00ff]" />
+                <Sun strokeWidth={3} className="w-[14px] h-[14px] text-[#00cc00ff]" fill="currentColor" />
               )}
             </div>
           </button>
@@ -835,8 +926,13 @@ export default function App() {
                           {itemsInMonth.length > 0 ? (
                             itemsInMonth.slice(0, 3).map(item => (
                               <div key={item.id} className="flex items-center gap-2 text-xs text-muted-foreground truncate">
-                                <div className="w-1.5 h-1.5 rounded-full bg-primary shrink-0" />
-                                <span className="font-bold text-[#00cc00ff] shrink-0">{format(item.date, 'dd')}:</span>
+                                <div 
+                                  className="w-1.5 h-1.5 rounded-full shrink-0" 
+                                  style={{ backgroundColor: getModalidadeColor(item.modalidade) }}
+                                />
+                                <span className="font-bold text-[#00cc00ff] shrink-0">
+                                  {format(item.date, 'dd')}:
+                                </span>
                                 <span className="truncate">{item.title}</span>
                               </div>
                             ))
@@ -862,133 +958,137 @@ export default function App() {
                 {displayDates.length === 0 ? (
                   <div className="py-20 text-center text-muted-foreground">Nenhum evento neste período.</div>
                 ) : (
-                  displayDates.map((date) => (
-                    <div key={date.toISOString()} className={cn(
-                      "flex flex-col gap-6",
-                      viewMode === 'DAY' ? "items-center text-center w-full" : "md:flex-row items-start"
-                    )}>
-                      <div className={cn(
-                        "flex md:flex-col items-center gap-4 md:gap-1 shrink-0 mt-1",
-                        viewMode === 'DAY' ? "justify-center" : "md:items-start md:w-28"
+                  displayDates.map((date) => {
+                    const dayItems = items.filter(i => isSameDay(i.date, date) && i.type === 'event');
+                    const dateColor = '#00cc00ff';
+
+                    return (
+                      <div key={date.toISOString()} className={cn(
+                        "flex flex-col gap-6",
+                        viewMode === 'DAY' ? "items-center text-center w-full" : "md:flex-row items-start"
                       )}>
-                        <div className="flex items-baseline">
-                          {viewMode === 'DAY' ? (
-                            <div className="text-5xl font-black tracking-tighter font-display flex items-baseline">
-                              <span className="text-[#00cc00ff]">{format(date, 'dd')}</span>
-                              <span className={cn("text-2xl ml-1", darkMode ? "text-[#f7f7f7ff]" : "text-[#121212ff]")}>/{format(date, 'MM')}</span>
-                            </div>
-                          ) : (
-                            <>
-                              <span className="text-4xl font-black tracking-tighter text-[#00cc00ff] font-display">{format(date, 'dd')}</span>
-                              <span className={cn("font-bold uppercase tracking-widest text-xs ml-0.5", darkMode ? "text-[#f7f7f7ff]" : "text-[#121212ff]")}>
-                                /{format(date, 'MM')}
-                              </span>
-                            </>
+                        <div className={cn(
+                          "flex md:flex-col items-center gap-4 md:gap-1 shrink-0 mt-1",
+                          viewMode === 'DAY' ? "justify-center" : "md:items-start md:w-28"
+                        )}>
+                          <div className="flex items-baseline">
+                            {viewMode === 'DAY' ? (
+                              <div className="text-5xl font-black tracking-tighter font-display flex items-baseline">
+                                <span style={{ color: dateColor }}>{format(date, 'dd')}</span>
+                                <span className={cn("text-2xl ml-1", darkMode ? "text-[#f7f7f7ff]" : "text-[#121212ff]")}>/{format(date, 'MM')}</span>
+                              </div>
+                            ) : (
+                              <>
+                                <span className="text-4xl font-black tracking-tighter font-display" style={{ color: dateColor }}>{format(date, 'dd')}</span>
+                                <span className={cn("font-bold uppercase tracking-widest text-xs ml-0.5", darkMode ? "text-[#f7f7f7ff]" : "text-[#121212ff]")}>
+                                  /{format(date, 'MM')}
+                                </span>
+                              </>
+                            )}
+                          </div>
+                          {isAdmin && (
+                            <button 
+                              onClick={() => openAddModal(date)}
+                              className="p-2 rounded-full bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
+                            >
+                              <Plus className="w-5 h-5" />
+                            </button>
                           )}
                         </div>
-                        {isAdmin && (
-                          <button 
-                            onClick={() => openAddModal(date)}
-                            className="p-2 rounded-full bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
-                          >
-                            <Plus className="w-5 h-5" />
-                          </button>
-                        )}
-                      </div>
 
-                      <div className="flex-1 w-full space-y-3">
-                        {(() => {
-                          const dayItems = items.filter(i => isSameDay(i.date, date) && i.type === 'event');
-                          if (dayItems.length === 0) {
-                            return (
-                              <div className={cn(
-                                "p-6 rounded-2xl text-xs uppercase tracking-widest font-bold text-center",
-                                darkMode ? "bg-[#262626] text-[#C5C5C5]" : "bg-[#e2e2e2] text-[#121212ff]"
-                              )}>
-                                Livre
-                              </div>
-                            );
-                          }
-                          return dayItems.map(item => (
-                            <div key={item.id} className="p-6 rounded-2xl bg-card border border-border shadow-sm hover:shadow-lg transition-all flex flex-row items-center gap-6 group">
-                              <div className="shrink-0">
-                                <div 
-                                  onClick={() => item.cover && setSelectedImage({url: item.cover, title: item.title})}
-                                  className={cn(
-                                    "w-20 h-20 border rounded-xl overflow-hidden relative flex items-center justify-center bg-muted/20 shrink-0",
-                                    item.cover ? "cursor-zoom-in" : ""
-                                  )}
-                                >
-                                  {item.cover ? (
-                                    <img 
-                                      src={item.cover} 
-                                      alt="Capa" 
-                                      className="absolute inset-0 w-full h-full object-cover" 
-                                    />
-                                  ) : (
-                                    <span className="text-[8px] font-black uppercase tracking-tighter text-muted-foreground/20 text-center px-1">Sem Capa</span>
-                                  )}
+                        <div className="flex-1 w-full space-y-3">
+                          {(() => {
+                            if (dayItems.length === 0) {
+                              return (
+                                <div className={cn(
+                                  "p-6 rounded-2xl text-xs uppercase tracking-widest font-bold text-center",
+                                  darkMode ? "bg-[#262626] text-[#C5C5C5]" : "bg-[#e2e2e2] text-[#121212ff]"
+                                )}>
+                                  Livre
                                 </div>
-                              </div>
-                              <div className="flex-1 flex flex-col gap-2">
-                                <div className="w-full text-right leading-snug">
-                                  <h4 className="text-base font-display font-black text-foreground tracking-tight inline">{item.title}</h4>
-                                  {item.modalidade && (
-                                    <span className="inline-block whitespace-nowrap align-baseline ml-2">
-                                      <span className="text-muted-foreground/30 font-light mr-2">|</span>
-                                      <span className={cn(
-                                        "text-[11px] font-black uppercase tracking-widest italic",
-                                        item.modalidade === 'Ponto Facultativo' ? 'text-orange-500' : item.modalidade === 'Feriado' ? 'text-red-500' : 'text-[#00cc00ff]'
-                                      )}>
-                                        {item.modalidade}
-                                      </span>
-                                    </span>
-                                  )}
-                                </div>
-                                {item.description && (
-                                  <p className="text-sm text-muted-foreground leading-relaxed text-right">{item.description}</p>
-                                )}
-                                <div className="flex items-center justify-end gap-3 mt-auto pt-2">
-                                  {(item.startTime || item.endTime) && (
-                                    <div className={cn(
-                                      "flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium border-[0.5px] bg-transparent whitespace-nowrap",
-                                      darkMode ? "border-zinc-600 text-[#f7f7f7ff]" : "border-zinc-300 text-black"
-                                    )}>
-                                      <Clock className="w-3.5 h-3.5 text-[#00cc00ff]" />
-                                      <span>{item.startTime}{item.startTime && item.endTime ? ' - ' : ''}{item.endTime}</span>
-                                    </div>
-                                  )}
-                                  {isAdmin && (
+                              );
+                            }
+                            return dayItems.map(item => (
+                              <div key={item.id} className="p-6 rounded-2xl bg-card border border-border shadow-sm hover:shadow-lg transition-all flex flex-row items-center gap-6 group">
+                                {!['Ponto Facultativo', 'Feriado'].includes(item.modalidade || '') && (
+                                  <div className="shrink-0">
                                     <div 
-                                      className="flex items-center gap-0 border rounded-full p-0.5 bg-transparent"
-                                      style={{ 
-                                        borderWidth: '0.5px', 
-                                        borderColor: darkMode ? 'rgba(247, 247, 247, 0.4)' : 'rgba(18, 18, 18, 0.4)' 
-                                      }}
+                                      onClick={() => item.cover && setSelectedImage({url: item.cover, title: item.title})}
+                                      className={cn(
+                                        "w-20 h-20 border rounded-xl overflow-hidden relative flex items-center justify-center bg-muted/20 shrink-0",
+                                        item.cover ? "cursor-zoom-in" : ""
+                                      )}
                                     >
-                                      <button onClick={() => openAddModal(item.date, item)} className="p-1.5 rounded-full transition-colors text-primary/70 hover:text-primary hover:bg-primary/10">
-                                        <Pencil className="w-4 h-4" />
-                                      </button>
-                                      <div 
-                                        className="h-4 mx-1" 
-                                        style={{ 
-                                          width: '0.5px', 
-                                          backgroundColor: darkMode ? 'rgba(247, 247, 247, 0.4)' : 'rgba(18, 18, 18, 0.4)' 
-                                        }} 
-                                      />
-                                      <button onClick={(e) => { e.stopPropagation(); setItemToDelete(item.id); setIsDeleteConfirmOpen(true); }} className="p-1.5 text-destructive/70 hover:text-destructive hover:bg-destructive/10 rounded-full transition-colors">
-                                        <Trash className="w-4 h-4" />
-                                      </button>
+                                      {item.cover ? (
+                                        <img 
+                                          src={item.cover} 
+                                          alt="Capa" 
+                                          className="absolute inset-0 w-full h-full object-cover" 
+                                        />
+                                      ) : (
+                                        <span className="text-[8px] font-black uppercase tracking-tighter text-muted-foreground/20 text-center px-1">Sem Capa</span>
+                                      )}
                                     </div>
+                                  </div>
+                                )}
+                                <div className="flex-1 flex flex-col gap-2">
+                                  <div className="w-full text-right leading-snug">
+                                    <h4 className="text-base font-display font-black text-foreground tracking-tight inline">{item.title}</h4>
+                                    {item.modalidade && (
+                                      <span className="inline-block whitespace-nowrap align-baseline ml-2">
+                                        <span className="text-muted-foreground/30 font-light mr-2">|</span>
+                                        <span 
+                                          className="text-[11px] font-black uppercase tracking-widest italic"
+                                          style={{ color: getModalidadeColor(item.modalidade) }}
+                                        >
+                                          {item.modalidade}
+                                        </span>
+                                      </span>
+                                    )}
+                                  </div>
+                                  {item.description && (
+                                    <p className="text-sm text-muted-foreground leading-relaxed text-right">{item.description}</p>
                                   )}
+                                  <div className="flex items-center justify-end gap-3 mt-auto pt-2">
+                                    {(item.startTime || item.endTime) && (
+                                      <div className={cn(
+                                        "flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium border-[0.5px] bg-transparent whitespace-nowrap",
+                                        darkMode ? "border-zinc-600 text-[#f7f7f7ff]" : "border-zinc-500 text-black"
+                                      )}>
+                                        <Clock className="w-3.5 h-3.5 text-[#00cc00ff]" />
+                                        <span>{item.startTime}{item.startTime && item.endTime ? ' - ' : ''}{item.endTime}</span>
+                                      </div>
+                                    )}
+                                    {isAdmin && (
+                                      <div 
+                                        className={cn(
+                                          "flex items-center gap-0 border-[0.5px] rounded-full p-0.5 bg-transparent",
+                                          darkMode ? "border-zinc-600" : "border-zinc-500"
+                                        )}
+                                      >
+                                        <button onClick={() => openAddModal(item.date, item)} className="p-1.5 rounded-full transition-colors text-primary/70 hover:text-primary hover:bg-primary/10">
+                                          <Pencil className="w-4 h-4" />
+                                        </button>
+                                        <div 
+                                          className={cn(
+                                            "h-4 mx-1 w-[0.5px]",
+                                            darkMode ? "bg-zinc-600" : "bg-zinc-500"
+                                          )}
+                                        />
+                                        <button onClick={(e) => { e.stopPropagation(); setItemToDelete(item.id); setIsDeleteConfirmOpen(true); }} className="p-1.5 text-destructive/70 hover:text-destructive hover:bg-destructive/10 rounded-full transition-colors">
+                                          <Trash className="w-4 h-4" />
+                                        </button>
+                                      </div>
+                                    )}
+                                  </div>
                                 </div>
                               </div>
-                            </div>
-                          ));
-                        })()}
+                            ));
+                          })()}
+                        </div>
                       </div>
-                    </div>
-                  ))
+                    );
+                  })
                 )}
               </div>
             )}
@@ -1006,8 +1106,7 @@ export default function App() {
               const today = new Date();
               const currentWeekStart = startOfWeek(today, { weekStartsOn: 1 });
               
-              // Determine what to show
-              const activeTaskDate = selectedTaskWeek || currentWeekStart;
+              const activeTaskDate = currentWeekStart;
 
               // 3. MAIN DASHBOARD (User or Admin specific week)
               if (activeTaskDate) {
@@ -1072,11 +1171,10 @@ export default function App() {
                                         )}
                                         {isAdmin && (
                                           <div 
-                                            className="flex items-center gap-3 px-3 py-1.5 bg-transparent border rounded-full cursor-default" 
-                                            style={{ 
-                                              borderWidth: '0.5px',
-                                              borderColor: darkMode ? 'rgba(247, 247, 247, 0.4)' : 'rgba(18, 18, 18, 0.4)'
-                                            }}
+                                            className={cn(
+                                              "flex items-center gap-3 px-3 py-1.5 bg-transparent border-[0.5px] rounded-full cursor-default",
+                                              darkMode ? "border-zinc-600" : "border-zinc-500"
+                                            )}
                                             onPointerDown={(e) => e.stopPropagation()}
                                           >
                                             <button 
@@ -1089,11 +1187,10 @@ export default function App() {
                                               <Pencil className="w-3.5 h-3.5" />
                                             </button>
                                             <div 
-                                              className="h-3" 
-                                              style={{ 
-                                                width: '0.5px',
-                                                backgroundColor: darkMode ? 'rgba(247, 247, 247, 0.4)' : 'rgba(18, 18, 18, 0.4)'
-                                              }} 
+                                              className={cn(
+                                                "h-3 w-[0.5px]",
+                                                darkMode ? "bg-zinc-600" : "bg-zinc-500"
+                                              )}
                                             />
                                             <button 
                                               onClick={(e) => {
@@ -1282,6 +1379,9 @@ export default function App() {
                                       } else if (prev === 'Prática' && formTitle === 'Atividades no Centro') {
                                         setFormTitle('');
                                       }
+                                      if (['Ponto Facultativo', 'Feriado'].includes(opt)) {
+                                        setFormCover(null);
+                                      }
                                     }
                                   }}
                                   className={cn(
@@ -1415,90 +1515,90 @@ export default function App() {
                 {formType === 'event' ? (
                   <>
                     {!['Ponto Facultativo', 'Feriado'].includes(selectedModalidade) && (
-                      <>
-                        <div className="grid grid-cols-2 gap-4">
-                          <div className="space-y-1">
-                            <label className="block text-center text-sm font-medium text-foreground">Início</label>
-                            <TimePickerDropdown 
-                              value={selectedModalidade === 'Prática' ? "18:45" : formStartTime} 
-                              onChange={setFormStartTime} 
-                              disabled={selectedModalidade === 'Prática'} 
-                            />
-                            <input type="hidden" name="startTime" value={selectedModalidade === 'Prática' ? "18:45" : formStartTime} />
-                          </div>
-                          <div className="space-y-1">
-                            <label className="block text-center text-sm font-medium text-foreground">Término</label>
-                            <TimePickerDropdown 
-                              value={selectedModalidade === 'Prática' ? "20:00" : formEndTime} 
-                              onChange={setFormEndTime} 
-                              disabled={selectedModalidade === 'Prática'} 
-                            />
-                            <input type="hidden" name="endTime" value={selectedModalidade === 'Prática' ? "20:00" : formEndTime} />
-                          </div>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-1">
+                          <label className="block text-center text-sm font-medium text-foreground">Início</label>
+                          <TimePickerDropdown 
+                            value={selectedModalidade === 'Prática' ? "18:45" : formStartTime} 
+                            onChange={setFormStartTime} 
+                            disabled={selectedModalidade === 'Prática'} 
+                          />
+                          <input type="hidden" name="startTime" value={selectedModalidade === 'Prática' ? "18:45" : formStartTime} />
                         </div>
-                        
-                        <div className="flex gap-2">
-                          <div className="flex-1 flex flex-col space-y-1">
-                            <label className="block text-center text-sm font-medium text-foreground">Chamada</label>
-                            <textarea name="description" defaultValue={editingItem?.description || ""} rows={2} className="flex-1 w-full p-2.5 text-center rounded-xl bg-transparent border border-border focus:border-primary outline-none transition-all resize-none" />
-                          </div>
-                          
-                          <div className="w-14 shrink-0 flex flex-col space-y-1">
-                            <label className="block text-center text-sm font-medium text-foreground">Capa</label>
-                            <input 
-                              type="file" 
-                              ref={fileInputRef} 
-                              className="hidden" 
-                              accept="image/*"
-                              onChange={(e) => {
-                                const file = e.target.files?.[0];
-                                if (file) {
-                                  const reader = new FileReader();
-                                  reader.onloadend = () => {
-                                    const img = new Image();
-                                    img.onload = () => {
-                                      const canvas = document.createElement('canvas');
-                                      const MAX_SIZE = 400;
-                                      let width = img.width;
-                                      let height = img.height;
-                                      if (width > height) {
-                                        if (width > MAX_SIZE) {
-                                          height *= MAX_SIZE / width;
-                                          width = MAX_SIZE;
-                                        }
-                                      } else {
-                                        if (height > MAX_SIZE) {
-                                          width *= MAX_SIZE / height;
-                                          height = MAX_SIZE;
-                                        }
-                                      }
-                                      canvas.width = width;
-                                      canvas.height = height;
-                                      const ctx = canvas.getContext('2d');
-                                      ctx?.drawImage(img, 0, 0, width, height);
-                                      setFormCover(canvas.toDataURL('image/jpeg', 0.8));
-                                    };
-                                    img.src = reader.result as string;
-                                  };
-                                  reader.readAsDataURL(file);
-                                }
-                              }}
-                            />
-                            <button 
-                              type="button" 
-                              onClick={() => fileInputRef.current?.click()}
-                              className="flex-1 w-full rounded-xl bg-transparent border border-border flex items-center justify-center hover:bg-muted transition-colors text-[#00cc00ff] hover:opacity-80 overflow-hidden"
-                            >
-                              {formCover ? (
-                                <img src={formCover} alt="Preview" className="w-full h-full object-cover" />
-                              ) : (
-                                <Upload className="w-5 h-5" />
-                              )}
-                            </button>
-                          </div>
+                        <div className="space-y-1">
+                          <label className="block text-center text-sm font-medium text-foreground">Término</label>
+                          <TimePickerDropdown 
+                            value={selectedModalidade === 'Prática' ? "20:00" : formEndTime} 
+                            onChange={setFormEndTime} 
+                            disabled={selectedModalidade === 'Prática'} 
+                          />
+                          <input type="hidden" name="endTime" value={selectedModalidade === 'Prática' ? "20:00" : formEndTime} />
                         </div>
-                      </>
+                      </div>
                     )}
+                    
+                    <div className="flex gap-2">
+                      <div className="flex-1 flex flex-col space-y-1">
+                        <label className="block text-center text-sm font-medium text-foreground">Chamada</label>
+                        <textarea name="description" defaultValue={editingItem?.description || ""} rows={2} className="flex-1 w-full p-2.5 text-center rounded-xl bg-transparent border border-border focus:border-primary outline-none transition-all resize-none" />
+                      </div>
+                      
+                      {!['Ponto Facultativo', 'Feriado'].includes(selectedModalidade) && (
+                        <div className="w-14 shrink-0 flex flex-col space-y-1">
+                          <label className="block text-center text-sm font-medium text-foreground">Capa</label>
+                          <input 
+                            type="file" 
+                            ref={fileInputRef} 
+                            className="hidden" 
+                            accept="image/*"
+                            onChange={(e) => {
+                              const file = e.target.files?.[0];
+                              if (file) {
+                                const reader = new FileReader();
+                                reader.onloadend = () => {
+                                  const img = new Image();
+                                  img.onload = () => {
+                                    const canvas = document.createElement('canvas');
+                                    const MAX_SIZE = 400;
+                                    let width = img.width;
+                                    let height = img.height;
+                                    if (width > height) {
+                                      if (width > MAX_SIZE) {
+                                        height *= MAX_SIZE / width;
+                                        width = MAX_SIZE;
+                                      }
+                                    } else {
+                                      if (height > MAX_SIZE) {
+                                        width *= MAX_SIZE / height;
+                                        height = MAX_SIZE;
+                                      }
+                                    }
+                                    canvas.width = width;
+                                    canvas.height = height;
+                                    const ctx = canvas.getContext('2d');
+                                    ctx?.drawImage(img, 0, 0, width, height);
+                                    setFormCover(canvas.toDataURL('image/jpeg', 0.8));
+                                  };
+                                  img.src = reader.result as string;
+                                };
+                                reader.readAsDataURL(file);
+                              }
+                            }}
+                          />
+                          <button 
+                            type="button" 
+                            onClick={() => fileInputRef.current?.click()}
+                            className="flex-1 w-full rounded-xl bg-transparent border border-border flex items-center justify-center hover:bg-muted transition-colors text-[#00cc00ff] hover:opacity-80 overflow-hidden"
+                          >
+                            {formCover ? (
+                              <img src={formCover} alt="Preview" className="w-full h-full object-cover" />
+                            ) : (
+                              <Upload className="w-5 h-5" />
+                            )}
+                          </button>
+                        </div>
+                      )}
+                    </div>
                   </>
                 ) : (
                   (formCategory !== 'checklist') ? (
@@ -1596,7 +1696,7 @@ export default function App() {
                     }}
                     onKeyDown={(e) => {
                       if (e.key === 'Enter') {
-                        if (adminPassword === 'admsemeadores*' || (typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'))) {
+                        if (adminPassword === 'admsemeadores*' || (typeof window !== 'undefined' && isLocalhost(window.location.hostname))) {
                           setIsAdmin(true);
                           setIsAuthModalOpen(false);
                         } else {
@@ -1630,7 +1730,7 @@ export default function App() {
                 <div className="pt-4">
                   <button 
                     onClick={() => {
-                      if (adminPassword === 'admsemeadores*' || (typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'))) {
+                      if (adminPassword === 'admsemeadores*' || (typeof window !== 'undefined' && isLocalhost(window.location.hostname))) {
                         setIsAdmin(true);
                         setIsAuthModalOpen(false);
                       } else {
