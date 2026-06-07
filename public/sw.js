@@ -1,5 +1,5 @@
 // Service Worker for Cronograma Semeadores
-const CACHE_NAME = 'semeadores-cronograma-v1';
+const CACHE_NAME = 'semeadores-cronograma-v7';
 const ASSETS_TO_CACHE = [
   '/',
   '/index.html',
@@ -36,8 +36,21 @@ self.addEventListener('fetch', function(event) {
     return;
   }
 
+  // Do not intercept Vite/development files to avoid net::ERR_FAILED in dev mode
+  const url = event.request.url;
+  if (
+    url.includes('/@vite/') || 
+    url.includes('/@fs/') || 
+    url.includes('/@id/') || 
+    url.includes('/node_modules/') || 
+    url.includes('/src/') ||
+    url.includes('hot-update')
+  ) {
+    return;
+  }
+
   // Only handle HTTP/HTTPS requests from our origin
-  if (!event.request.url.startsWith(self.location.origin)) {
+  if (!url.startsWith(self.location.origin)) {
     return;
   }
 
