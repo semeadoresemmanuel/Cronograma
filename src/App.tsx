@@ -599,12 +599,18 @@ export default function App() {
     const unsubscribe = onSnapshot(collection(db, 'items'), (snapshot) => {
       const fetchedItems: CalendarItem[] = [];
       snapshot.forEach((doc) => {
-        const data = doc.data();
-        fetchedItems.push({
-          ...data,
-          id: doc.id,
-          date: parseISO(data.date),
-        } as CalendarItem);
+        try {
+          const data = doc.data();
+          if (data && data.date) {
+            fetchedItems.push({
+              ...data,
+              id: doc.id,
+              date: parseISO(data.date),
+            } as CalendarItem);
+          }
+        } catch (e) {
+          console.warn('Skipping malformed item', doc.id, e);
+        }
       });
       setItems(fetchedItems);
     }, (error) => {
