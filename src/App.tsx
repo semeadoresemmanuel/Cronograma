@@ -44,7 +44,16 @@ import adminPadlockUnlock from '@/src/elements/admin_padlock_unlock.svg';
 import taskMode from '@/src/elements/task_mode.svg';
 import timelineMode from '@/src/elements/timeline_mode.svg';
 
-
+const generateUUID = (): string => {
+  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+    return crypto.randomUUID();
+  }
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+    const r = (Math.random() * 16) | 0;
+    const v = c === 'x' ? r : (r & 0x3) | 0x8;
+    return v.toString(16);
+  });
+};
 
 type Tab = 'cronograma' | 'tarefas';
 type ViewMode = 'DAY' | 'MONTH' | 'YEAR';
@@ -751,7 +760,7 @@ export default function App() {
     if (editingItem) {
       setItems(items.map(item => item.id === editingItem.id ? { ...item, ...itemData } : item));
     } else {
-      const newItem = { id: crypto.randomUUID(), ...itemData };
+      const newItem = { id: generateUUID(), ...itemData };
       setItems([...items, newItem]);
       sendNotification(newItem);
     }
