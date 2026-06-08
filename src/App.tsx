@@ -582,6 +582,7 @@ export default function App() {
   const [showAdminPassword, setShowAdminPassword] = useState(false);
   const [authError, setAuthError] = useState(false);
 
+  const [hasLoadedFromServer, setHasLoadedFromServer] = useState(false);
   const [items, setItems] = useState<CalendarItem[]>(() => {
     const saved = localStorage.getItem('smd_items');
     if (saved) {
@@ -590,6 +591,20 @@ export default function App() {
     }
     return [];
   });
+
+  useEffect(() => {
+    fetch('/api/items')
+      .then(res => res.json())
+      .then(data => {
+        const parsed = data.map((item: any) => ({ ...item, date: parseISO(item.date) }));
+        setItems(parsed);
+        setHasLoadedFromServer(true);
+      })
+      .catch(err => {
+        console.error('Failed to load items from server, using local fallback:', err);
+        setHasLoadedFromServer(true);
+      });
+  }, []);
 
   const [isAdmin, setIsAdmin] = useState(() => {
     if (typeof window !== 'undefined') {
@@ -655,7 +670,21 @@ export default function App() {
     localStorage.setItem('smd_items', JSON.stringify(items.map(item => ({
       ...item, date: item.date.toISOString()
     })))); 
-  }, [items]);
+
+    if (hasLoadedFromServer) {
+      fetch('/api/items', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(items.map(item => ({
+          ...item, date: item.date.toISOString()
+        })))
+      }).catch(err => {
+        console.error('Failed to save items to server:', err);
+      });
+    }
+  }, [items, hasLoadedFromServer]);
 
   const displayDates = useMemo(() => {
     try {
