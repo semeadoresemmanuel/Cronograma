@@ -1,5 +1,5 @@
 // Service Worker for Cronograma Semeadores
-const CACHE_NAME = 'semeadores-cronograma-v14';
+const CACHE_NAME = 'semeadores-cronograma-v15';
 const ASSETS_TO_CACHE = [
   '/',
   '/index.html',
@@ -44,7 +44,8 @@ self.addEventListener('fetch', function(event) {
     url.includes('/@id/') || 
     url.includes('/node_modules/') || 
     url.includes('/src/') ||
-    url.includes('hot-update')
+    url.includes('hot-update') ||
+    url.includes('/api/')
   ) {
     return;
   }
