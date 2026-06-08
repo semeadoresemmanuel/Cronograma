@@ -1,5 +1,5 @@
 // Service Worker for Cronograma Semeadores
-const CACHE_NAME = 'semeadores-cronograma-v15';
+const CACHE_NAME = 'semeadores-cronograma-v16';
 const ASSETS_TO_CACHE = [
   '/',
   '/index.html',
