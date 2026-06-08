@@ -317,11 +317,16 @@ const TimePickerDropdown = ({ value, onChange, disabled }: TimePickerProps) => {
   }, [minute]);
 
   const handleHourChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const val = e.target.value.replace(/\D/g, '').slice(0, 2);
+    let val = e.target.value.replace(/\D/g, '');
+    if (val.length > 2) {
+      val = val.slice(-2);
+    }
     setTempHour(val);
-    const num = parseInt(val, 10);
-    if (!isNaN(num) && num >= 0 && num <= 23) {
-      onChange(`${num.toString().padStart(2, '0')}:${minute}`);
+    if (val.length === 2) {
+      const num = parseInt(val, 10);
+      if (!isNaN(num) && num >= 0 && num <= 23) {
+        onChange(`${num.toString().padStart(2, '0')}:${minute}`);
+      }
     }
   };
 
@@ -336,11 +341,16 @@ const TimePickerDropdown = ({ value, onChange, disabled }: TimePickerProps) => {
   };
 
   const handleMinuteChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const val = e.target.value.replace(/\D/g, '').slice(0, 2);
+    let val = e.target.value.replace(/\D/g, '');
+    if (val.length > 2) {
+      val = val.slice(-2);
+    }
     setTempMinute(val);
-    const num = parseInt(val, 10);
-    if (!isNaN(num) && num >= 0 && num <= 59) {
-      onChange(`${hour}:${num.toString().padStart(2, '0')}`);
+    if (val.length === 2) {
+      const num = parseInt(val, 10);
+      if (!isNaN(num) && num >= 0 && num <= 59) {
+        onChange(`${hour}:${num.toString().padStart(2, '0')}`);
+      }
     }
   };
 
@@ -437,7 +447,17 @@ const TimePickerDropdown = ({ value, onChange, disabled }: TimePickerProps) => {
                     value={tempHour}
                     onChange={handleHourChange}
                     onBlur={handleHourBlur}
-                    onFocus={(e) => e.target.select()}
+                    onFocus={(e) => {
+                      const target = e.target;
+                      setTimeout(() => {
+                        target.select();
+                      }, 0);
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.currentTarget.blur();
+                      }
+                    }}
                     className="w-14 h-12 text-center bg-muted/50 border border-border rounded-xl text-3xl font-bold text-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"
                   />
                   <button
@@ -469,7 +489,17 @@ const TimePickerDropdown = ({ value, onChange, disabled }: TimePickerProps) => {
                     value={tempMinute}
                     onChange={handleMinuteChange}
                     onBlur={handleMinuteBlur}
-                    onFocus={(e) => e.target.select()}
+                    onFocus={(e) => {
+                      const target = e.target;
+                      setTimeout(() => {
+                        target.select();
+                      }, 0);
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.currentTarget.blur();
+                      }
+                    }}
                     className="w-14 h-12 text-center bg-muted/50 border border-border rounded-xl text-3xl font-bold text-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"
                   />
                   <button
@@ -567,7 +597,7 @@ export default function App() {
     }
     return false;
   });
-  const [currentDate, setCurrentDate] = useState(() => {
+  const [currentDate] = useState(() => {
     const today = new Date();
     const monthEnd = endOfMonth(today);
     const mondays = eachDayOfInterval({ start: startOfMonth(today), end: monthEnd }).filter(d => isMonday(d));
@@ -585,6 +615,7 @@ export default function App() {
   const [formCategory, setFormCategory] = useState<'checklist' | 'responsavel' | 'orientacao' | undefined>(undefined);
   const [formCover, setFormCover] = useState<string | null>(null);
   const [isDaySelectOpen, setIsDaySelectOpen] = useState(false);
+  const [isMonthSelectOpen, setIsMonthSelectOpen] = useState(false);
   const [isModalidadeSelectOpen, setIsModalidadeSelectOpen] = useState(false);
   const [selectedMember, setSelectedMember] = useState<string>('');
   const [isMemberSelectOpen, setIsMemberSelectOpen] = useState(false);
@@ -683,7 +714,7 @@ export default function App() {
       endTime: (formData.get('endTime') as string) || "",
       description: (formData.get('description') as string) || "",
       modalidade: formData.get('modalidade') as string,
-      cover: ['Ponto Facultativo', 'Feriado'].includes(formData.get('modalidade') as string) ? undefined : (formCover || undefined),
+      cover: formCover || undefined,
       completed: editingItem ? editingItem.completed : false,
       order: editingItem?.order ?? Date.now()
     };
@@ -706,17 +737,18 @@ export default function App() {
     setSelectedModalidade(item?.modalidade || '');
     setSelectedMember(item?.description || '');
     setIsMemberSelectOpen(false);
+    setIsDaySelectOpen(false);
+    setIsMonthSelectOpen(false);
     setFormTitle(item?.title || '');
     setFormType(item?.type || type);
     setFormCategory(item?.category || category);
     setFormCover(item?.cover || null);
-    
     if (item) {
       setFormStartTime(item.startTime || "00:00");
       setFormEndTime(item.endTime || "00:00");
     } else {
       setFormStartTime(type === 'task' ? "18:45" : "00:00");
-      setFormEndTime(type === 'task' ? "19:00" : "00:00");
+      setFormEndTime(type === 'task' ? "19:15" : "00:00");
     }
     
     setIsModalOpen(true);
@@ -771,7 +803,7 @@ export default function App() {
               style={{ boxShadow: '0 2px 6px rgba(0,0,0,0.15)' }}
             >
               {darkMode ? (
-                <Moon strokeWidth={3} className="w-[14px] h-[14px] text-[#00cc00ff]" fill="currentColor" />
+                <Moon stroke="none" className="w-[14px] h-[14px] text-[#00cc00ff]" fill="currentColor" />
               ) : (
                 <Sun strokeWidth={3} className="w-[14px] h-[14px] text-[#00cc00ff]" fill="currentColor" />
               )}
@@ -888,7 +920,8 @@ export default function App() {
                   {yearMonths.map((month) => {
                     const itemsInMonth = items.filter(i => 
                       i.date.getMonth() === month.getMonth() && 
-                      i.date.getFullYear() === month.getFullYear()
+                      i.date.getFullYear() === month.getFullYear() &&
+                      i.type !== 'task'
                     );
                     const today = new Date();
                     const monthEnd = endOfMonth(today);
@@ -959,7 +992,13 @@ export default function App() {
                   <div className="py-20 text-center text-muted-foreground">Nenhum evento neste período.</div>
                 ) : (
                   displayDates.map((date) => {
-                    const dayItems = items.filter(i => isSameDay(i.date, date) && i.type === 'event');
+                    const dayItems = items
+                      .filter(i => isSameDay(i.date, date) && i.type !== 'task')
+                      .sort((a, b) => {
+                        const timeA = a.startTime || '00:00';
+                        const timeB = b.startTime || '00:00';
+                        return timeA.localeCompare(timeB);
+                      });
                     const dateColor = '#00cc00ff';
 
                     return (
@@ -1010,7 +1049,7 @@ export default function App() {
                             }
                             return dayItems.map(item => (
                               <div key={item.id} className="p-6 rounded-2xl bg-card border border-border shadow-sm hover:shadow-lg transition-all flex flex-row items-center gap-6 group">
-                                {!['Ponto Facultativo', 'Feriado'].includes(item.modalidade || '') && (
+                                {item.type !== 'task' && (
                                   <div className="shrink-0">
                                     <div 
                                       onClick={() => item.cover && setSelectedImage({url: item.cover, title: item.title})}
@@ -1052,7 +1091,7 @@ export default function App() {
                                   <div className="flex items-center justify-end gap-3 mt-auto pt-2">
                                     {(item.startTime || item.endTime) && (
                                       <div className={cn(
-                                        "flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium border-[0.5px] bg-transparent whitespace-nowrap",
+                                        "flex items-center gap-2 px-3 h-8 rounded-full text-xs font-medium border-[0.5px] bg-transparent whitespace-nowrap",
                                         darkMode ? "border-zinc-600 text-[#f7f7f7ff]" : "border-zinc-500 text-black"
                                       )}>
                                         <Clock className="w-3.5 h-3.5 text-[#00cc00ff]" />
@@ -1062,11 +1101,11 @@ export default function App() {
                                     {isAdmin && (
                                       <div 
                                         className={cn(
-                                          "flex items-center gap-0 border-[0.5px] rounded-full p-0.5 bg-transparent",
+                                          "flex items-center gap-0 border-[0.5px] rounded-full h-8 px-1 bg-transparent",
                                           darkMode ? "border-zinc-600" : "border-zinc-500"
                                         )}
                                       >
-                                        <button onClick={() => openAddModal(item.date, item)} className="p-1.5 rounded-full transition-colors text-primary/70 hover:text-primary hover:bg-primary/10">
+                                        <button onClick={() => openAddModal(item.date, item)} className="p-1 rounded-full transition-colors text-primary/70 hover:text-primary hover:bg-primary/10">
                                           <Pencil className="w-4 h-4" />
                                         </button>
                                         <div 
@@ -1075,7 +1114,7 @@ export default function App() {
                                             darkMode ? "bg-zinc-600" : "bg-zinc-500"
                                           )}
                                         />
-                                        <button onClick={(e) => { e.stopPropagation(); setItemToDelete(item.id); setIsDeleteConfirmOpen(true); }} className="p-1.5 text-destructive/70 hover:text-destructive hover:bg-destructive/10 rounded-full transition-colors">
+                                        <button onClick={(e) => { e.stopPropagation(); setItemToDelete(item.id); setIsDeleteConfirmOpen(true); }} className="p-1 text-destructive/70 hover:text-destructive hover:bg-destructive/10 rounded-full transition-colors">
                                           <Trash className="w-4 h-4" />
                                         </button>
                                       </div>
@@ -1116,8 +1155,6 @@ export default function App() {
                 );
 
                 const checklist = weekItems.filter(i => i.category === 'checklist');
-                const responsaveis = weekItems.filter(i => i.category === 'responsavel').sort((a, b) => a.title.localeCompare(b.title));
-                const orientacoes = weekItems.filter(i => i.category === 'orientacao');
 
                 return (
                   <div className="max-w-xl mx-auto">
@@ -1264,68 +1301,147 @@ export default function App() {
               <form key={editingItem?.id || 'new'} onSubmit={saveItem} className="p-5 space-y-4">
 
 
-                <div className={cn("grid gap-4", (formCategory !== 'orientacao' && formCategory !== 'responsavel') ? "grid-cols-[80px_1fr]" : "grid-cols-1")}>
-                  {formCategory !== 'orientacao' && formCategory !== 'responsavel' && (
+                <div className={cn("grid gap-4", (formCategory !== 'orientacao' && formCategory !== 'responsavel' && formType === 'task') ? "grid-cols-[145px_1fr]" : "grid-cols-1")}>
+                  {formCategory !== 'orientacao' && formCategory !== 'responsavel' && formType === 'task' && (
                     <div className="space-y-1 relative">
-                      <label className="block text-center text-sm font-medium text-foreground">Dia</label>
-                      <button
-                        type="button"
-                        disabled={viewMode === 'DAY' && formType !== 'task'}
-                        onClick={() => setIsDaySelectOpen(!isDaySelectOpen)}
-                        className={cn(
-                          "w-full p-2.5 flex items-center justify-between rounded-xl bg-card text-foreground border border-border focus:border-primary outline-none transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed",
-                          isDaySelectOpen && "border-primary ring-1 ring-primary/20"
-                        )}
-                      >
-                        <span className="flex-1 text-center font-bold">
-                          {selectedDate ? selectedDate.getDate().toString().padStart(2, '0') : '01'}
-                        </span>
-                        <ChevronDown className={cn("w-4 h-4 text-foreground/50 transition-transform", isDaySelectOpen && "rotate-180")} />
-                      </button>
-                      
-                      <input type="hidden" name="day" value={selectedDate ? selectedDate.getDate() : 1} />
+                      <label className="block text-center text-sm font-medium text-foreground">Data</label>
+                      <div className="flex gap-1.5">
+                        {/* Day Selector */}
+                        <div className="relative flex-[1]">
+                          <button
+                            type="button"
+                            disabled={viewMode === 'DAY' && formType !== 'task'}
+                            onClick={() => {
+                              setIsDaySelectOpen(!isDaySelectOpen);
+                              setIsMonthSelectOpen(false);
+                            }}
+                            className={cn(
+                              "w-full p-2 flex items-center justify-between rounded-xl bg-card text-foreground border border-border focus:border-primary outline-none transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed text-xs sm:text-sm h-[42px]",
+                              isDaySelectOpen && "border-primary ring-1 ring-primary/20"
+                            )}
+                          >
+                            <span className="flex-1 text-center font-bold">
+                              {selectedDate ? selectedDate.getDate().toString().padStart(2, '0') : '01'}
+                            </span>
+                            <ChevronDown className={cn("w-3.5 h-3.5 text-foreground/50 transition-transform", isDaySelectOpen && "rotate-180")} />
+                          </button>
 
-                      <AnimatePresence>
-                        {isDaySelectOpen && (!['DAY'].includes(viewMode) || formType === 'task') && (
-                          <>
-                            <div className="fixed inset-0 z-30" onClick={() => setIsDaySelectOpen(false)} />
-                            <motion.div
-                              initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                              animate={{ opacity: 1, y: 0, scale: 1 }}
-                              exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                              className="absolute left-0 right-0 z-40 mt-2 bg-card border border-border rounded-2xl shadow-xl max-h-48 overflow-y-auto"
-                            >
-                              <div className="p-1 flex flex-col gap-1">
-                                {(() => {
-                                  const days = Array.from({ length: 31 }, (_, i) => i + 1);
-                                  return days.map(d => (
-                                    <button
-                                      key={d}
-                                      type="button"
-                                      onClick={() => {
-                                        if (selectedDate) {
-                                          const newDate = new Date(selectedDate);
-                                          newDate.setDate(d);
-                                          setSelectedDate(newDate);
-                                        }
-                                        setIsDaySelectOpen(false);
-                                      }}
-                                      className={cn(
-                                        "p-2 text-sm rounded-lg transition-colors",
-                                        selectedDate?.getDate() === d 
-                                          ? "bg-primary text-primary-foreground font-bold" 
-                                          : "hover:bg-primary/10 text-foreground"
-                                      )}
-                                    >
-                                      {d.toString().padStart(2, '0')}
-                                    </button>
-                                  ));
-                                })()}
-                              </div>
-                            </motion.div>
-                          </>
-                        )}
-                      </AnimatePresence>
+                          <AnimatePresence>
+                            {isDaySelectOpen && (!['DAY'].includes(viewMode) || formType === 'task') && (
+                              <>
+                                <div className="fixed inset-0 z-30" onClick={() => setIsDaySelectOpen(false)} />
+                                <motion.div
+                                  initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                                  exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                                  className="absolute left-0 right-0 z-40 mt-2 bg-card border border-border rounded-2xl shadow-xl max-h-48 overflow-y-auto min-w-[55px]"
+                                >
+                                  <div className="p-1 flex flex-col gap-1">
+                                    {(() => {
+                                      const days = Array.from({ length: 31 }, (_, i) => i + 1);
+                                      return days.map(d => (
+                                        <button
+                                          key={d}
+                                          type="button"
+                                          onClick={() => {
+                                            if (selectedDate) {
+                                              const newDate = new Date(selectedDate);
+                                              newDate.setDate(d);
+                                              setSelectedDate(newDate);
+                                            }
+                                            setIsDaySelectOpen(false);
+                                          }}
+                                          className={cn(
+                                            "p-1.5 text-xs rounded-lg transition-colors text-center font-medium",
+                                            selectedDate?.getDate() === d 
+                                              ? "bg-primary text-primary-foreground font-bold" 
+                                              : "hover:bg-primary/10 text-foreground"
+                                          )}
+                                        >
+                                          {d.toString().padStart(2, '0')}
+                                        </button>
+                                      ));
+                                    })()}
+                                  </div>
+                                </motion.div>
+                              </>
+                            )}
+                          </AnimatePresence>
+                        </div>
+
+                        {/* Month Selector */}
+                        <div className="relative flex-[1.3]">
+                          <button
+                            type="button"
+                            disabled={viewMode === 'DAY' && formType !== 'task'}
+                            onClick={() => {
+                              setIsMonthSelectOpen(!isMonthSelectOpen);
+                              setIsDaySelectOpen(false);
+                            }}
+                            className={cn(
+                              "w-full p-2 flex items-center justify-between rounded-xl bg-card text-foreground border border-border focus:border-primary outline-none transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed text-xs sm:text-sm h-[42px]",
+                              isMonthSelectOpen && "border-primary ring-1 ring-primary/20"
+                            )}
+                          >
+                            <span className="flex-1 text-center font-bold capitalize">
+                              {selectedDate ? format(selectedDate, 'MMM', { locale: ptBR }) : 'Jan'}
+                            </span>
+                            <ChevronDown className={cn("w-3.5 h-3.5 text-foreground/50 transition-transform", isMonthSelectOpen && "rotate-180")} />
+                          </button>
+
+                          <AnimatePresence>
+                            {isMonthSelectOpen && (!['DAY'].includes(viewMode) || formType === 'task') && (
+                              <>
+                                <div className="fixed inset-0 z-30" onClick={() => setIsMonthSelectOpen(false)} />
+                                <motion.div
+                                  initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                                  exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                                  className="absolute left-0 right-0 z-40 mt-2 bg-card border border-border rounded-2xl shadow-xl max-h-48 overflow-y-auto min-w-[70px]"
+                                >
+                                  <div className="p-1 flex flex-col gap-1">
+                                    {[
+                                      { value: 0, label: 'Jan' },
+                                      { value: 1, label: 'Fev' },
+                                      { value: 2, label: 'Mar' },
+                                      { value: 3, label: 'Abr' },
+                                      { value: 4, label: 'Mai' },
+                                      { value: 5, label: 'Jun' },
+                                      { value: 6, label: 'Jul' },
+                                      { value: 7, label: 'Ago' },
+                                      { value: 8, label: 'Set' },
+                                      { value: 9, label: 'Out' },
+                                      { value: 10, label: 'Nov' },
+                                      { value: 11, label: 'Dez' }
+                                    ].map(m => (
+                                      <button
+                                        key={m.value}
+                                        type="button"
+                                        onClick={() => {
+                                          if (selectedDate) {
+                                            const newDate = new Date(selectedDate);
+                                            newDate.setMonth(m.value);
+                                            setSelectedDate(newDate);
+                                          }
+                                          setIsMonthSelectOpen(false);
+                                        }}
+                                        className={cn(
+                                          "p-1.5 text-xs rounded-lg transition-colors text-center capitalize font-medium",
+                                          selectedDate?.getMonth() === m.value
+                                            ? "bg-primary text-primary-foreground font-bold"
+                                            : "hover:bg-primary/10 text-foreground"
+                                        )}
+                                      >
+                                        {m.label}
+                                      </button>
+                                    ))}
+                                  </div>
+                                </motion.div>
+                              </>
+                            )}
+                          </AnimatePresence>
+                        </div>
+                      </div>
                     </div>
                   )}
 
@@ -1467,10 +1583,13 @@ export default function App() {
                                     'Amanda',
                                     'Carla',
                                     'Carlos Henrique',
+                                    'Eder',
                                     'Gilberto',
                                     'Jean',
+                                    'Laura',
                                     'Maria de Lourdes',
                                     'Ruth',
+                                    'Thainá',
                                     'Wallace'
                                   ].map(opt => {
                                     const isSelected = selectedMember.split(', ').filter(Boolean).includes(opt);
@@ -1538,66 +1657,69 @@ export default function App() {
                     )}
                     
                     <div className="flex gap-2">
-                      <div className="flex-1 flex flex-col space-y-1">
-                        <label className="block text-center text-sm font-medium text-foreground">Chamada</label>
-                        <textarea name="description" defaultValue={editingItem?.description || ""} rows={2} className="flex-1 w-full p-2.5 text-center rounded-xl bg-transparent border border-border focus:border-primary outline-none transition-all resize-none" />
-                      </div>
-                      
                       {!['Ponto Facultativo', 'Feriado'].includes(selectedModalidade) && (
-                        <div className="w-14 shrink-0 flex flex-col space-y-1">
-                          <label className="block text-center text-sm font-medium text-foreground">Capa</label>
-                          <input 
-                            type="file" 
-                            ref={fileInputRef} 
-                            className="hidden" 
-                            accept="image/*"
-                            onChange={(e) => {
-                              const file = e.target.files?.[0];
-                              if (file) {
-                                const reader = new FileReader();
-                                reader.onloadend = () => {
-                                  const img = new Image();
-                                  img.onload = () => {
-                                    const canvas = document.createElement('canvas');
-                                    const MAX_SIZE = 400;
-                                    let width = img.width;
-                                    let height = img.height;
-                                    if (width > height) {
-                                      if (width > MAX_SIZE) {
-                                        height *= MAX_SIZE / width;
-                                        width = MAX_SIZE;
-                                      }
-                                    } else {
-                                      if (height > MAX_SIZE) {
-                                        width *= MAX_SIZE / height;
-                                        height = MAX_SIZE;
-                                      }
-                                    }
-                                    canvas.width = width;
-                                    canvas.height = height;
-                                    const ctx = canvas.getContext('2d');
-                                    ctx?.drawImage(img, 0, 0, width, height);
-                                    setFormCover(canvas.toDataURL('image/jpeg', 0.8));
-                                  };
-                                  img.src = reader.result as string;
-                                };
-                                reader.readAsDataURL(file);
-                              }
-                            }}
-                          />
-                          <button 
-                            type="button" 
-                            onClick={() => fileInputRef.current?.click()}
-                            className="flex-1 w-full rounded-xl bg-transparent border border-border flex items-center justify-center hover:bg-muted transition-colors text-[#00cc00ff] hover:opacity-80 overflow-hidden"
-                          >
-                            {formCover ? (
-                              <img src={formCover} alt="Preview" className="w-full h-full object-cover" />
-                            ) : (
-                              <Upload className="w-5 h-5" />
-                            )}
-                          </button>
+                        <div className="flex-1 flex flex-col space-y-1">
+                          <label className="block text-center text-sm font-medium text-foreground">Chamada</label>
+                          <textarea name="description" defaultValue={editingItem?.description || ""} rows={2} className="flex-1 w-full p-2.5 text-center rounded-xl bg-transparent border border-border focus:border-primary outline-none transition-all resize-none" />
                         </div>
                       )}
+                      
+                      <div className={cn(
+                        "flex flex-col space-y-1",
+                        ['Ponto Facultativo', 'Feriado'].includes(selectedModalidade) ? "w-full h-24" : "w-14 shrink-0"
+                      )}>
+                        <label className="block text-center text-sm font-medium text-foreground">Capa</label>
+                        <input 
+                          type="file" 
+                          ref={fileInputRef} 
+                          className="hidden" 
+                          accept="image/*"
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (file) {
+                              const reader = new FileReader();
+                              reader.onloadend = () => {
+                                const img = new Image();
+                                img.onload = () => {
+                                  const canvas = document.createElement('canvas');
+                                  const MAX_SIZE = 400;
+                                  let width = img.width;
+                                  let height = img.height;
+                                  if (width > height) {
+                                    if (width > MAX_SIZE) {
+                                      height *= MAX_SIZE / width;
+                                      width = MAX_SIZE;
+                                    }
+                                  } else {
+                                    if (height > MAX_SIZE) {
+                                      width *= MAX_SIZE / height;
+                                      height = MAX_SIZE;
+                                    }
+                                  }
+                                  canvas.width = width;
+                                  canvas.height = height;
+                                  const ctx = canvas.getContext('2d');
+                                  ctx?.drawImage(img, 0, 0, width, height);
+                                  setFormCover(canvas.toDataURL('image/jpeg', 0.8));
+                                };
+                                img.src = reader.result as string;
+                              };
+                              reader.readAsDataURL(file);
+                            }
+                          }}
+                        />
+                        <button 
+                          type="button" 
+                          onClick={() => fileInputRef.current?.click()}
+                          className="flex-1 w-full rounded-xl bg-transparent border border-border flex items-center justify-center hover:bg-muted transition-colors text-[#00cc00ff] hover:opacity-80 overflow-hidden"
+                        >
+                          {formCover ? (
+                            <img src={formCover} alt="Preview" className="w-full h-full object-cover" />
+                          ) : (
+                            <Upload className="w-5 h-5" />
+                          )}
+                        </button>
+                      </div>
                     </div>
                   </>
                 ) : (
