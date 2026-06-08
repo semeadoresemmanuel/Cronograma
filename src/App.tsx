@@ -35,6 +35,8 @@ import {
   EyeOff,
   Download
 } from 'lucide-react';
+import { collection, onSnapshot, setDoc, deleteDoc, doc } from 'firebase/firestore';
+import { db } from './lib/firebase';
 import { motion, AnimatePresence, Reorder } from 'motion/react';
 import { cn } from '@/src/lib/utils';
 import { CalendarItem, ItemType } from '@/src/types';
@@ -591,28 +593,25 @@ export default function App() {
   const [showAdminPassword, setShowAdminPassword] = useState(false);
   const [authError, setAuthError] = useState(false);
 
-  const [hasLoadedFromServer, setHasLoadedFromServer] = useState(false);
-  const [items, setItems] = useState<CalendarItem[]>(() => {
-    const saved = localStorage.getItem('smd_items');
-    if (saved) {
-      const parsed = JSON.parse(saved);
-      return parsed.map((item: any) => ({ ...item, date: parseISO(item.date) }));
-    }
-    return [];
-  });
+  const [items, setItems] = useState<CalendarItem[]>([]);
 
   useEffect(() => {
-    fetch('/api/items')
-      .then(res => res.json())
-      .then(data => {
-        const parsed = data.map((item: any) => ({ ...item, date: parseISO(item.date) }));
-        setItems(parsed);
-        setHasLoadedFromServer(true);
-      })
-      .catch(err => {
-        console.error('Failed to load items from server, using local fallback:', err);
-        setHasLoadedFromServer(true);
+    const unsubscribe = onSnapshot(collection(db, 'items'), (snapshot) => {
+      const fetchedItems: CalendarItem[] = [];
+      snapshot.forEach((doc) => {
+        const data = doc.data();
+        fetchedItems.push({
+          ...data,
+          id: doc.id,
+          date: parseISO(data.date),
+        } as CalendarItem);
       });
+      setItems(fetchedItems);
+    }, (error) => {
+      console.error("Firebase error: ", error);
+    });
+
+    return () => unsubscribe();
   }, []);
 
   const [isAdmin, setIsAdmin] = useState(() => {
@@ -656,6 +655,8 @@ export default function App() {
       indices.forEach((globalIndex, i) => {
         if (globalIndex !== -1) {
           next[globalIndex] = newOrder[i];
+          const updatedItem = newOrder[i];
+          setDoc(doc(db, 'items', updatedItem.id), { ...updatedItem, date: updatedItem.date.toISOString() });
         }
       });
       return next;
@@ -676,24 +677,8 @@ export default function App() {
   useEffect(() => { localStorage.setItem('smd_view', JSON.stringify(viewMode)); }, [viewMode]);
   
   useEffect(() => { 
-    localStorage.setItem('smd_items', JSON.stringify(items.map(item => ({
-      ...item, date: item.date.toISOString()
-    })))); 
-
-    if (hasLoadedFromServer) {
-      fetch('/api/items', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(items.map(item => ({
-          ...item, date: item.date.toISOString()
-        })))
-      }).catch(err => {
-        console.error('Failed to save items to server:', err);
-      });
-    }
-  }, [items, hasLoadedFromServer]);
+    // Data sync handled by Firebase on individual actions
+  }, [items]);
 
   const displayDates = useMemo(() => {
     try {
@@ -758,10 +743,13 @@ export default function App() {
     };
 
     if (editingItem) {
-      setItems(items.map(item => item.id === editingItem.id ? { ...item, ...itemData } : item));
+      const updatedItem = { ...editingItem, ...itemData };
+      setItems(items.map(item => item.id === editingItem.id ? updatedItem : item));
+      setDoc(doc(db, 'items', updatedItem.id), { ...updatedItem, date: updatedItem.date.toISOString() });
     } else {
       const newItem = { id: generateUUID(), ...itemData };
       setItems([...items, newItem]);
+      setDoc(doc(db, 'items', newItem.id), { ...newItem, date: newItem.date.toISOString() });
       sendNotification(newItem);
     }
     
@@ -1934,7 +1922,9 @@ export default function App() {
                 <button 
                   onClick={() => {
                     if (itemToDelete) {
+                      const deletedId = itemToDelete;
                       setItems(prev => prev.filter(i => i.id !== itemToDelete));
+                      deleteDoc(doc(db, 'items', deletedId));
                       setItemToDelete(null);
                       setIsDeleteConfirmOpen(false);
                     }
