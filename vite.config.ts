@@ -17,5 +17,6 @@ export default defineConfig({
     hmr: process.env.DISABLE_HMR !== 'true' ? { overlay: false } : false,
     host: true,
     allowedHosts: true,
+    cors: true,
   },
 });
