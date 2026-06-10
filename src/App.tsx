@@ -66,7 +66,7 @@ const AdminIcon = ({ className, unlocked }: { className?: string; unlocked?: boo
   return (
     <img 
       src={unlocked ? adminPadlockUnlock : adminPadlock} 
-      className={className} 
+      className={cn("theme-icon-green", className)} 
       alt={unlocked ? "Unlocked" : "Locked"} 
     />
   );
@@ -278,7 +278,7 @@ const getModalidadeColor = (modalidade?: string): string => {
     case 'Encerramento':
       return '#CAD100ff'; // Amarelo Dourado (#CAD100)
     case 'O Livro dos Espíritos':
-      return '#00CC00ff'; // Verde
+      return 'var(--primary)'; // Verde
     case 'Reforma Íntima':
       return '#FF69B4ff'; // Rosa
     case 'Especial':
@@ -290,7 +290,7 @@ const getModalidadeColor = (modalidade?: string): string => {
     case 'Feriado':
       return '#FF0000ff'; // Vermelho
     default:
-      return '#00CC00ff'; // Default is green
+      return 'var(--primary)'; // Default is green
   }
 };
 
@@ -306,16 +306,14 @@ const isLocalhost = (hostname: string): boolean => {
   );
 };
 
-interface TimePickerProps {
+interface ClockPickerWidgetProps {
   value: string;
   onChange: (val: string) => void;
-  disabled?: boolean;
+  label: string;
 }
 
-const TimePickerDropdown = ({ value, onChange, disabled }: TimePickerProps) => {
-  const [isOpen, setIsOpen] = useState(false);
+const ClockPickerWidget = ({ value, onChange, label }: ClockPickerWidgetProps) => {
   const [hour, minute] = (value || "00:00").split(":");
-  
   const [tempHour, setTempHour] = useState(hour);
   const [tempMinute, setTempMinute] = useState(minute);
 
@@ -329,9 +327,7 @@ const TimePickerDropdown = ({ value, onChange, disabled }: TimePickerProps) => {
 
   const handleHourChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     let val = e.target.value.replace(/\D/g, '');
-    if (val.length > 2) {
-      val = val.slice(-2);
-    }
+    if (val.length > 2) val = val.slice(-2);
     setTempHour(val);
     if (val.length === 2) {
       const num = parseInt(val, 10);
@@ -343,9 +339,7 @@ const TimePickerDropdown = ({ value, onChange, disabled }: TimePickerProps) => {
 
   const handleHourBlur = () => {
     let num = parseInt(tempHour, 10);
-    if (isNaN(num) || num < 0 || num > 23) {
-      num = 0;
-    }
+    if (isNaN(num) || num < 0 || num > 23) num = 0;
     const formatted = num.toString().padStart(2, '0');
     setTempHour(formatted);
     onChange(`${formatted}:${minute}`);
@@ -353,9 +347,7 @@ const TimePickerDropdown = ({ value, onChange, disabled }: TimePickerProps) => {
 
   const handleMinuteChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     let val = e.target.value.replace(/\D/g, '');
-    if (val.length > 2) {
-      val = val.slice(-2);
-    }
+    if (val.length > 2) val = val.slice(-2);
     setTempMinute(val);
     if (val.length === 2) {
       const num = parseInt(val, 10);
@@ -367,9 +359,7 @@ const TimePickerDropdown = ({ value, onChange, disabled }: TimePickerProps) => {
 
   const handleMinuteBlur = () => {
     let num = parseInt(tempMinute, 10);
-    if (isNaN(num) || num < 0 || num > 59) {
-      num = 0;
-    }
+    if (isNaN(num) || num < 0 || num > 59) num = 0;
     const formatted = num.toString().padStart(2, '0');
     setTempMinute(formatted);
     onChange(`${hour}:${formatted}`);
@@ -416,18 +406,121 @@ const TimePickerDropdown = ({ value, onChange, disabled }: TimePickerProps) => {
   };
 
   return (
+    <div className="flex flex-col items-center">
+      <span className="text-sm font-bold text-foreground mb-3 uppercase tracking-wider">{label}</span>
+      <div className="flex items-center gap-2 bg-muted/20 border border-border p-3.5 rounded-2xl">
+        {/* Hours Column */}
+        <div className="flex flex-col items-center">
+          <span className="text-[10px] uppercase tracking-wider font-semibold text-muted-foreground mb-1 select-none">Hora</span>
+          <button
+            type="button"
+            onClick={handleHourIncrement}
+            className="p-1 rounded-lg hover:bg-primary/10 text-foreground transition-colors cursor-pointer"
+          >
+            <ChevronUp className="w-5 h-5 text-primary" />
+          </button>
+          <input
+            type="text"
+            inputMode="numeric"
+            pattern="[0-9]*"
+            value={tempHour}
+            onChange={handleHourChange}
+            onBlur={handleHourBlur}
+            onFocus={(e) => {
+              const target = e.target;
+              setTimeout(() => {
+                target.select();
+              }, 0);
+            }}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.currentTarget.blur();
+              }
+            }}
+            className="w-14 h-12 text-center bg-muted/50 border border-border rounded-xl text-3xl font-bold text-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"
+          />
+          <button
+            type="button"
+            onClick={handleHourDecrement}
+            className="p-1 rounded-lg hover:bg-primary/10 text-foreground transition-colors cursor-pointer"
+          >
+            <ChevronDown className="w-5 h-5 text-primary" />
+          </button>
+        </div>
+
+        {/* Separator */}
+        <div className="text-3xl font-bold text-foreground/50 self-center mt-3 select-none">:</div>
+
+        {/* Minutes Column */}
+        <div className="flex flex-col items-center">
+          <span className="text-[10px] uppercase tracking-wider font-semibold text-muted-foreground mb-1 select-none">Minuto</span>
+          <button
+            type="button"
+            onClick={handleMinuteIncrement}
+            className="p-1 rounded-lg hover:bg-primary/10 text-foreground transition-colors cursor-pointer"
+          >
+            <ChevronUp className="w-5 h-5 text-primary" />
+          </button>
+          <input
+            type="text"
+            inputMode="numeric"
+            pattern="[0-9]*"
+            value={tempMinute}
+            onChange={handleMinuteChange}
+            onBlur={handleMinuteBlur}
+            onFocus={(e) => {
+              const target = e.target;
+              setTimeout(() => {
+                target.select();
+              }, 0);
+            }}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.currentTarget.blur();
+              }
+            }}
+            className="w-14 h-12 text-center bg-muted/50 border border-border rounded-xl text-3xl font-bold text-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"
+          />
+          <button
+            type="button"
+            onClick={handleMinuteDecrement}
+            className="p-1 rounded-lg hover:bg-primary/10 text-foreground transition-colors cursor-pointer"
+          >
+            <ChevronDown className="w-5 h-5 text-primary" />
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+
+
+interface TimeRangePickerProps {
+  startTime: string;
+  onChangeStartTime: (val: string) => void;
+  endTime: string;
+  onChangeEndTime: (val: string) => void;
+  disabled?: boolean;
+}
+
+const TimeRangePickerDropdown = ({ startTime, onChangeStartTime, endTime, onChangeEndTime, disabled }: TimeRangePickerProps) => {
+  const [isOpen, setIsOpen] = useState(false);
+
+  return (
     <div className="w-full">
       <button
         type="button"
         disabled={disabled}
         onClick={() => setIsOpen(!isOpen)}
         className={cn(
-          "w-full p-2.5 flex items-center justify-between rounded-xl bg-card text-foreground border border-border focus:border-primary outline-none transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed font-bold text-center justify-center gap-2",
+          "w-full p-2.5 flex items-center rounded-xl bg-card text-foreground border border-border focus:border-primary outline-none transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed font-bold text-center justify-center gap-2",
           isOpen && "border-primary ring-1 ring-primary/20"
         )}
       >
-        <span>{value || "00:00"}</span>
-        <Clock className="w-4 h-4 text-[#00cc00ff]" />
+        <span className="flex-1 text-center font-bold">
+          {startTime} - {endTime}
+        </span>
       </button>
 
       <AnimatePresence>
@@ -438,96 +531,17 @@ const TimePickerDropdown = ({ value, onChange, disabled }: TimePickerProps) => {
               initial={{ opacity: 0, y: -10, scale: 0.95 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: -10, scale: 0.95 }}
-              className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-40 bg-card border border-border rounded-2xl shadow-xl p-4 flex flex-col items-center gap-4 w-[220px]"
+              className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-40 bg-card border border-border rounded-[2rem] shadow-2xl p-6 flex flex-col items-center gap-6 w-[90%] max-w-[480px]"
             >
-              <div className="flex items-center justify-center gap-3">
-                {/* Hours Column */}
-                <div className="flex flex-col items-center">
-                  <span className="text-[10px] uppercase tracking-wider font-semibold text-muted-foreground mb-1 select-none">Hora</span>
-                  <button
-                    type="button"
-                    onClick={handleHourIncrement}
-                    className="p-1 rounded-lg hover:bg-primary/10 text-foreground transition-colors cursor-pointer"
-                  >
-                    <ChevronUp className="w-5 h-5 text-primary" />
-                  </button>
-                  <input
-                    type="text"
-                    inputMode="numeric"
-                    pattern="[0-9]*"
-                    value={tempHour}
-                    onChange={handleHourChange}
-                    onBlur={handleHourBlur}
-                    onFocus={(e) => {
-                      const target = e.target;
-                      setTimeout(() => {
-                        target.select();
-                      }, 0);
-                    }}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') {
-                        e.currentTarget.blur();
-                      }
-                    }}
-                    className="w-14 h-12 text-center bg-muted/50 border border-border rounded-xl text-3xl font-bold text-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"
-                  />
-                  <button
-                    type="button"
-                    onClick={handleHourDecrement}
-                    className="p-1 rounded-lg hover:bg-primary/10 text-foreground transition-colors cursor-pointer"
-                  >
-                    <ChevronDown className="w-5 h-5 text-primary" />
-                  </button>
-                </div>
-
-                {/* Separator */}
-                <div className="text-3xl font-bold text-foreground/50 self-center mt-3 select-none">:</div>
-
-                {/* Minutes Column */}
-                <div className="flex flex-col items-center">
-                  <span className="text-[10px] uppercase tracking-wider font-semibold text-muted-foreground mb-1 select-none">Minuto</span>
-                  <button
-                    type="button"
-                    onClick={handleMinuteIncrement}
-                    className="p-1 rounded-lg hover:bg-primary/10 text-foreground transition-colors cursor-pointer"
-                  >
-                    <ChevronUp className="w-5 h-5 text-primary" />
-                  </button>
-                  <input
-                    type="text"
-                    inputMode="numeric"
-                    pattern="[0-9]*"
-                    value={tempMinute}
-                    onChange={handleMinuteChange}
-                    onBlur={handleMinuteBlur}
-                    onFocus={(e) => {
-                      const target = e.target;
-                      setTimeout(() => {
-                        target.select();
-                      }, 0);
-                    }}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') {
-                        e.currentTarget.blur();
-                      }
-                    }}
-                    className="w-14 h-12 text-center bg-muted/50 border border-border rounded-xl text-3xl font-bold text-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"
-                  />
-                  <button
-                    type="button"
-                    onClick={handleMinuteDecrement}
-                    className="p-1 rounded-lg hover:bg-primary/10 text-foreground transition-colors cursor-pointer"
-                  >
-                    <ChevronDown className="w-5 h-5 text-primary" />
-                  </button>
-                </div>
+              <div className="flex flex-col sm:flex-row gap-6 items-center justify-center w-full">
+                <ClockPickerWidget value={startTime} onChange={onChangeStartTime} label="Início" />
+                <ClockPickerWidget value={endTime} onChange={onChangeEndTime} label="Término" />
               </div>
 
-              {/* Confirm Button */}
               <button
                 type="button"
                 onClick={() => setIsOpen(false)}
-                className="w-full py-1.5 rounded-xl bg-primary text-primary-foreground font-bold hover:opacity-90 transition-opacity uppercase text-xs tracking-wider cursor-pointer"
+                className="w-full py-2.5 rounded-xl bg-primary text-primary-foreground font-bold hover:opacity-90 transition-opacity uppercase text-xs tracking-wider cursor-pointer mt-2"
               >
                 Confirmar
               </button>
@@ -814,13 +828,13 @@ export default function App() {
                 animate={{ y: 0, opacity: 1 }}
                 exit={{ y: -15, opacity: 0 }}
                 transition={{ duration: 0.25, ease: "easeInOut" }}
-                className="w-[24px] h-[24px] absolute z-10 drop-shadow-none"
+                className="w-[24px] h-[24px] absolute z-10 drop-shadow-none theme-icon-green"
               />
             </AnimatePresence>
           </motion.button>
 
           <div className={cn("px-6 rounded-full flex-shrink-0 relative flex items-center justify-center w-[190px] sm:w-[220px] h-[30px]", darkMode ? "bg-[#262626ff]" : "bg-[#E2E2E2]")}>
-            <span className="text-xs font-display font-bold uppercase tracking-widest text-[#00cc00ff]">
+            <span className="text-xs font-display font-bold uppercase tracking-widest text-primary">
               {activeTab === 'cronograma' ? 'CRONOGRAMA' : 'TAREFAS'}
             </span>
           </div>
@@ -842,9 +856,9 @@ export default function App() {
               style={{ boxShadow: '0 2px 6px rgba(0,0,0,0.15)' }}
             >
               {darkMode ? (
-                <Moon stroke="none" className="w-[14px] h-[14px] text-[#00cc00ff]" fill="currentColor" />
+                <Moon stroke="none" className="w-[14px] h-[14px] text-primary" fill="currentColor" />
               ) : (
-                <Sun strokeWidth={3} className="w-[14px] h-[14px] text-[#00cc00ff]" fill="currentColor" />
+                <Sun strokeWidth={3} className="w-[14px] h-[14px] text-primary" fill="currentColor" />
               )}
             </div>
           </button>
@@ -890,7 +904,7 @@ export default function App() {
                         }}
                         className={cn(
                           "px-3 sm:px-4 h-full flex items-center rounded-full text-xs font-display font-bold uppercase tracking-wider transition-colors relative",
-                          viewMode === mode ? "text-[#00cc00ff]" : (darkMode ? "text-[#f7f7f7ff] hover:text-[#00cc00ff]/80" : "text-[#121212ff] hover:text-[#00cc00ff]/80")
+                          viewMode === mode ? "text-primary" : (darkMode ? "text-[#f7f7f7ff] hover:text-primary/80" : "text-[#121212ff] hover:text-primary/80")
                         )}
                       >
                         {viewMode === mode && (
@@ -948,15 +962,15 @@ export default function App() {
                     )}
                   </div>
                   
-                  <span className="text-sm font-bold uppercase tracking-widest text-[#00cc00ff] -mt-1">
+                  <span className="text-sm font-bold uppercase tracking-widest text-primary -mt-1">
                     {format(viewMode === 'YEAR' ? selectedMonthInYearView! : currentDate, 'yyyy')}
                   </span>
                 </div>
               )}
 
               {viewMode === 'YEAR' && !selectedMonthInYearView && (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-6">
-                  {yearMonths.map((month) => {
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-5">
+                  {yearMonths.map((month, index) => {
                     const itemsInMonth = items.filter(i => 
                       i.date.getMonth() === month.getMonth() && 
                       i.date.getFullYear() === month.getFullYear() &&
@@ -974,22 +988,24 @@ export default function App() {
                         key={month.toISOString()}
                         onClick={() => setSelectedMonthInYearView(month)}
                         className={cn(
-                          "p-6 rounded-3xl border transition-all text-left group relative overflow-hidden",
+                          "p-6 lg:p-5 rounded-3xl border transition-all text-left group relative overflow-hidden",
                           darkMode ? "bg-[#262626]" : "bg-[#E2E2E2]",
-                          isCurrentMonth 
-                            ? "border-primary" 
-                            : "border-border hover:border-primary/50 hover:shadow-md"
+                          "border-border hover:border-primary/50 hover:shadow-md",
+                          index === yearMonths.length - 1 && "lg:col-start-2"
                         )}
                       >
-                        <div className="flex justify-between items-center mb-4 pr-16">
+                        {isCurrentMonth && (
+                          <div className="absolute inset-0 bg-primary/25 pointer-events-none" />
+                        )}
+                        <div className="flex justify-between items-center mb-4 lg:mb-3 pr-16">
                           <h3 className="text-xl font-display font-bold uppercase tracking-tight text-foreground group-hover:text-primary transition-colors">
                             {format(month, 'MMMM', { locale: ptBR })}
                           </h3>
                         </div>
 
                         <div className="absolute right-0 top-1/2 -translate-y-1/2 flex items-center justify-center gap-3 min-w-[80px]">
-                          <div className="w-[1px] h-12 bg-[#00cc00]" />
-                          <span className="text-lg font-display font-bold text-[#00cc00ff]">
+                          <div className="w-[1px] h-12 bg-primary" />
+                          <span className="text-lg font-display font-bold text-primary">
                            {format(month, 'yyyy')}
                           </span>
                         </div>
@@ -1002,7 +1018,7 @@ export default function App() {
                                   className="w-1.5 h-1.5 rounded-full shrink-0" 
                                   style={{ backgroundColor: getModalidadeColor(item.modalidade) }}
                                 />
-                                <span className="font-bold text-[#00cc00ff] shrink-0">
+                                <span className="font-bold text-primary shrink-0">
                                   {format(item.date, 'dd')}:
                                 </span>
                                 <span className="truncate">{item.title}</span>
@@ -1014,10 +1030,6 @@ export default function App() {
                           {itemsInMonth.length > 3 && (
                             <p className="text-[10px] text-primary font-bold mt-1">+ {itemsInMonth.length - 3} itens</p>
                           )}
-                        </div>
-
-                        <div className="absolute bottom-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <ChevronRight className="w-5 h-5 text-primary" />
                         </div>
                       </button>
                     );
@@ -1038,7 +1050,7 @@ export default function App() {
                         const timeB = b.startTime || '00:00';
                         return timeA.localeCompare(timeB);
                       });
-                    const dateColor = '#00cc00ff';
+                    const dateColor = 'var(--primary)';
 
                     return (
                       <div key={date.toISOString()} className={cn(
@@ -1133,7 +1145,7 @@ export default function App() {
                                         "flex items-center gap-2 px-3 h-8 rounded-full text-xs font-medium border-[0.5px] bg-transparent whitespace-nowrap",
                                         darkMode ? "border-zinc-600 text-[#f7f7f7ff]" : "border-zinc-500 text-black"
                                       )}>
-                                        <Clock className="w-3.5 h-3.5 text-[#00cc00ff]" />
+                                        <Clock className="w-3.5 h-3.5 text-primary" />
                                         <span>{item.startTime}{item.startTime && item.endTime ? ' - ' : ''}{item.endTime}</span>
                                       </div>
                                     )}
@@ -1232,7 +1244,7 @@ export default function App() {
                                           )}
                                           {(item.startTime || item.endTime) && (
                                             <span className="text-[10px] text-muted-foreground flex items-center gap-1">
-                                              <Clock className="w-3.5 h-3.5 text-[#00cc00ff]" />
+                                              <Clock className="w-3.5 h-3.5 text-primary" />
                                               <span>{item.startTime}{item.startTime && item.endTime ? ' - ' : ''}{item.endTime}</span>
                                             </span>
                                           )}
@@ -1288,7 +1300,7 @@ export default function App() {
                     ) : (
                       !isAdmin && (
                         <div className={cn("border border-border rounded-3xl p-4 sm:p-6 shadow-sm text-center", darkMode ? "bg-[#262626]" : "bg-[#E2E2E2]")}>
-                          <p className={cn("text-[10px] sm:text-xs italic py-2 px-1 sm:px-2 whitespace-nowrap", darkMode ? "text-[#F7F7F7]" : "text-[#121212]")}>
+                          <p className="text-[10px] sm:text-xs italic py-2 px-1 sm:px-2 whitespace-nowrap text-primary">
                             Nenhuma atividade registrada para esta semana.
                           </p>
                         </div>
@@ -1315,29 +1327,30 @@ export default function App() {
       <AnimatePresence>
         {isModalOpen && (
           <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center pointer-events-none">
-            <motion.div 
-              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} 
-              onClick={() => { setIsModalOpen(false); setEditingItem(null); }} 
+            <div 
+              onClick={() => { setIsModalOpen(false); setEditingItem(null); setIsMemberSelectOpen(false); }} 
               className="absolute inset-0 bottom-sheet-overlay pointer-events-auto" 
             />
-            <motion.div 
-              initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }} transition={{ type: "tween", duration: 0.3 }}
-              className="w-full sm:max-w-md bg-background sm:rounded-[2rem] rounded-t-[2rem] shadow-2xl relative z-10 pointer-events-auto max-h-[90vh] overflow-y-auto"
+            <div 
+              className={cn(
+                "w-full sm:max-w-md bg-background sm:rounded-[2rem] rounded-t-[2rem] shadow-2xl relative z-10 pointer-events-auto max-h-[90vh] flex flex-col overflow-hidden transition-all duration-300",
+                isMemberSelectOpen ? "h-[85vh] sm:h-[650px]" : "h-auto"
+              )}
             >
               <div className="sticky top-0 bg-background z-20 pt-5 pb-3 px-6 flex items-center justify-center border-b border-border">
                 <div className="w-12 h-1.5 bg-muted rounded-full absolute top-2 left-1/2 -translate-x-1/2 sm:hidden" />
-                <h2 className="text-lg font-bold uppercase text-[#00cc00ff]">
+                <h2 className="text-lg font-bold uppercase text-primary">
                   {formCategory === 'responsavel' 
                     ? (editingItem ? 'Editar Responsáveis' : 'Selecionar Responsáveis')
                     : (editingItem ? 'Editar ' : 'Adicionar ') + (formCategory === 'orientacao' ? 'Orientação' : (formType === 'task' ? 'Tarefa' : 'Encontro'))
                   }
                 </h2>
-                <button type="button" onClick={() => { setIsModalOpen(false); setEditingItem(null); }} className="p-2 bg-muted hover:bg-muted-foreground/20 rounded-full transition-colors absolute right-4">
+                <button type="button" onClick={() => { setIsModalOpen(false); setEditingItem(null); setIsMemberSelectOpen(false); }} className="p-2 bg-muted hover:bg-muted-foreground/20 rounded-full transition-colors absolute right-4">
                   <X className="w-5 h-5" />
                 </button>
               </div>
               
-              <form key={editingItem?.id || 'new'} onSubmit={saveItem} className="p-5 space-y-4">
+              <form key={editingItem?.id || 'new'} onSubmit={saveItem} className="p-5 space-y-4 overflow-y-auto flex-1 no-scrollbar">
 
 
                 <div className={cn("grid gap-4", (formCategory !== 'orientacao' && formCategory !== 'responsavel' && formType === 'task') ? "grid-cols-[145px_1fr]" : "grid-cols-1")}>
@@ -1377,29 +1390,33 @@ export default function App() {
                                 >
                                   <div className="p-1 flex flex-col gap-1">
                                     {(() => {
-                                      const days = Array.from({ length: 31 }, (_, i) => i + 1);
-                                      return days.map(d => (
-                                        <button
-                                          key={d}
-                                          type="button"
-                                          onClick={() => {
-                                            if (selectedDate) {
-                                              const newDate = new Date(selectedDate);
-                                              newDate.setDate(d);
-                                              setSelectedDate(newDate);
-                                            }
-                                            setIsDaySelectOpen(false);
-                                          }}
-                                          className={cn(
-                                            "p-1.5 text-xs rounded-lg transition-colors text-center font-medium",
-                                            selectedDate?.getDate() === d 
-                                              ? "bg-primary text-primary-foreground font-bold" 
-                                              : "hover:bg-primary/10 text-foreground"
-                                          )}
-                                        >
-                                          {d.toString().padStart(2, '0')}
-                                        </button>
-                                      ));
+                                      if (!selectedDate) return null;
+                                      const mondays = eachDayOfInterval({
+                                        start: startOfMonth(selectedDate),
+                                        end: endOfMonth(selectedDate)
+                                      }).filter(d => isMonday(d));
+                                      
+                                      return mondays.map(date => {
+                                        const d = date.getDate();
+                                        return (
+                                          <button
+                                            key={d}
+                                            type="button"
+                                            onClick={() => {
+                                              setSelectedDate(date);
+                                              setIsDaySelectOpen(false);
+                                            }}
+                                            className={cn(
+                                              "p-1.5 text-xs rounded-lg transition-colors text-center font-medium",
+                                              selectedDate?.getDate() === d 
+                                                ? "bg-primary text-primary-foreground font-bold" 
+                                                : "hover:bg-primary/10 text-foreground"
+                                            )}
+                                          >
+                                            {d.toString().padStart(2, '0')}
+                                          </button>
+                                        );
+                                      });
                                     })()}
                                   </div>
                                 </motion.div>
@@ -1458,9 +1475,21 @@ export default function App() {
                                         type="button"
                                         onClick={() => {
                                           if (selectedDate) {
-                                            const newDate = new Date(selectedDate);
-                                            newDate.setMonth(m.value);
-                                            setSelectedDate(newDate);
+                                            const currentMondays = eachDayOfInterval({
+                                              start: startOfMonth(selectedDate),
+                                              end: endOfMonth(selectedDate)
+                                            }).filter(d => isMonday(d));
+                                            const currentMondayIdx = currentMondays.findIndex(d => isSameDay(d, selectedDate));
+                                            
+                                            const newMonthStart = new Date(selectedDate.getFullYear(), m.value, 1);
+                                            const newMondays = eachDayOfInterval({
+                                              start: startOfMonth(newMonthStart),
+                                              end: endOfMonth(newMonthStart)
+                                            }).filter(d => isMonday(d));
+                                            
+                                            const targetIdx = currentMondayIdx !== -1 ? currentMondayIdx : 0;
+                                            const nextDate = newMondays[targetIdx] || newMondays[newMondays.length - 1] || newMonthStart;
+                                            setSelectedDate(nextDate);
                                           }
                                           setIsMonthSelectOpen(false);
                                         }}
@@ -1518,7 +1547,7 @@ export default function App() {
                             <div className="p-1 flex flex-col gap-1">
                               {(formType === 'task' 
                                 ? ['Apoio Operacional', 'Audiovisual', 'Divulgação', 'Informações', 'Recepção']
-                                : ['Abertura', 'O Livro dos Espíritos', 'Reforma Íntima', 'Especial', 'Prática', 'Encerramento', 'Ponto Facultativo', 'Feriado']
+                                : ['Abertura', 'Encerramento', 'Especial', 'Feriado', 'O Livro dos Espíritos', 'Ponto Facultativo', 'Prática', 'Reforma Íntima']
                               ).map(opt => (
                                 <button
                                   key={opt}
@@ -1587,7 +1616,7 @@ export default function App() {
                       />
                     </div>
                     {formType === 'task' && formCategory === 'checklist' && (
-                      <div className="space-y-1 relative">
+                      <div className="space-y-1">
                         <label className="block text-center text-sm font-medium text-foreground">Membro(s)</label>
                         <button
                           type="button"
@@ -1609,57 +1638,59 @@ export default function App() {
                         <AnimatePresence>
                           {isMemberSelectOpen && (
                             <>
-                              <div className="fixed inset-0 z-30" onClick={() => setIsMemberSelectOpen(false)} />
-                              <motion.div
-                                initial={{ opacity: 0, y: 10 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                exit={{ opacity: 0, y: 10 }}
-                                className="absolute left-0 right-0 z-40 mt-2 bg-card border border-border rounded-2xl shadow-xl overflow-hidden"
-                              >
-                                <div className="p-1 flex flex-col gap-1">
-                                  {[
-                                    'Alexandre',
-                                    'Amanda',
-                                    'Carla',
-                                    'Carlos Henrique',
-                                    'Eder',
-                                    'Gilberto',
-                                    'Jean',
-                                    'Laura',
-                                    'Maria de Lourdes',
-                                    'Ruth',
-                                    'Thainá',
-                                    'Wallace'
-                                  ].map(opt => {
-                                    const isSelected = selectedMember.split(', ').filter(Boolean).includes(opt);
-                                    return (
-                                      <button
-                                        key={opt}
-                                        type="button"
-                                        onClick={() => {
-                                          const currentMembers = selectedMember ? selectedMember.split(', ').filter(Boolean) : [];
-                                          let nextMembers;
-                                          if (currentMembers.includes(opt)) {
-                                            nextMembers = currentMembers.filter(m => m !== opt);
-                                          } else {
-                                            nextMembers = [...currentMembers, opt];
-                                          }
-                                          nextMembers.sort();
-                                          setSelectedMember(nextMembers.join(', '));
-                                        }}
-                                        className={cn(
-                                          "px-4 py-2 text-sm text-center rounded-lg transition-colors font-medium",
-                                          isSelected 
-                                            ? "bg-primary text-primary-foreground font-bold" 
-                                            : "hover:bg-primary/10 text-foreground"
-                                        )}
-                                      >
-                                        {opt}
-                                      </button>
-                                    );
-                                  })}
-                                </div>
-                              </motion.div>
+                              <div className="absolute inset-0 z-30 bg-background/60 backdrop-blur-sm" onClick={() => setIsMemberSelectOpen(false)} />
+                              <div className="absolute inset-0 z-40 flex items-center justify-center p-5 pointer-events-none">
+                                <motion.div
+                                  initial={{ opacity: 0, scale: 0.95 }}
+                                  animate={{ opacity: 1, scale: 1 }}
+                                  exit={{ opacity: 0, scale: 0.95 }}
+                                  className="w-full bg-card border border-border rounded-2xl shadow-xl overflow-hidden max-h-[70vh] overflow-y-auto no-scrollbar pointer-events-auto"
+                                >
+                                  <div className="p-1 flex flex-col gap-1">
+                                    {[
+                                      'Alexandre',
+                                      'Amanda',
+                                      'Carla',
+                                      'Carlos Henrique',
+                                      'Eder',
+                                      'Gilberto',
+                                      'Jean',
+                                      'Laura',
+                                      'Maria de Lourdes',
+                                      'Ruth',
+                                      'Thainá',
+                                      'Wallace'
+                                    ].map(opt => {
+                                      const isSelected = selectedMember.split(', ').filter(Boolean).includes(opt);
+                                      return (
+                                        <button
+                                          key={opt}
+                                          type="button"
+                                          onClick={() => {
+                                            const currentMembers = selectedMember ? selectedMember.split(', ').filter(Boolean) : [];
+                                            let nextMembers;
+                                            if (currentMembers.includes(opt)) {
+                                              nextMembers = currentMembers.filter(m => m !== opt);
+                                            } else {
+                                              nextMembers = [...currentMembers, opt];
+                                            }
+                                            nextMembers.sort();
+                                            setSelectedMember(nextMembers.join(', '));
+                                          }}
+                                          className={cn(
+                                            "px-4 py-2 text-sm text-center rounded-lg transition-colors font-medium",
+                                            isSelected 
+                                              ? "bg-primary text-primary-foreground font-bold" 
+                                              : "hover:bg-primary/10 text-foreground"
+                                          )}
+                                        >
+                                          {opt}
+                                        </button>
+                                      );
+                                    })}
+                                  </div>
+                                </motion.div>
+                              </div>
                             </>
                           )}
                         </AnimatePresence>
@@ -1673,25 +1704,17 @@ export default function App() {
                 {formType === 'event' ? (
                   <>
                     {!['Ponto Facultativo', 'Feriado'].includes(selectedModalidade) && (
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-1">
-                          <label className="block text-center text-sm font-medium text-foreground">Início</label>
-                          <TimePickerDropdown 
-                            value={selectedModalidade === 'Prática' ? "18:45" : formStartTime} 
-                            onChange={setFormStartTime} 
-                            disabled={selectedModalidade === 'Prática'} 
-                          />
-                          <input type="hidden" name="startTime" value={selectedModalidade === 'Prática' ? "18:45" : formStartTime} />
-                        </div>
-                        <div className="space-y-1">
-                          <label className="block text-center text-sm font-medium text-foreground">Término</label>
-                          <TimePickerDropdown 
-                            value={selectedModalidade === 'Prática' ? "20:00" : formEndTime} 
-                            onChange={setFormEndTime} 
-                            disabled={selectedModalidade === 'Prática'} 
-                          />
-                          <input type="hidden" name="endTime" value={selectedModalidade === 'Prática' ? "20:00" : formEndTime} />
-                        </div>
+                      <div className="space-y-1">
+                        <label className="block text-center text-sm font-medium text-foreground">Horário</label>
+                        <TimeRangePickerDropdown 
+                          startTime={selectedModalidade === 'Prática' ? "18:45" : formStartTime}
+                          onChangeStartTime={setFormStartTime}
+                          endTime={selectedModalidade === 'Prática' ? "20:00" : formEndTime}
+                          onChangeEndTime={setFormEndTime}
+                          disabled={selectedModalidade === 'Prática'}
+                        />
+                        <input type="hidden" name="startTime" value={selectedModalidade === 'Prática' ? "18:45" : formStartTime} />
+                        <input type="hidden" name="endTime" value={selectedModalidade === 'Prática' ? "20:00" : formEndTime} />
                       </div>
                     )}
                     
@@ -1750,7 +1773,7 @@ export default function App() {
                         <button 
                           type="button" 
                           onClick={() => fileInputRef.current?.click()}
-                          className="flex-1 w-full rounded-xl bg-transparent border border-border flex items-center justify-center hover:bg-muted transition-colors text-[#00cc00ff] hover:opacity-80 overflow-hidden"
+                          className="flex-1 w-full rounded-xl bg-transparent border border-border flex items-center justify-center hover:bg-muted transition-colors text-primary hover:opacity-80 overflow-hidden"
                         >
                           {formCover ? (
                             <img src={formCover} alt="Preview" className="w-full h-full object-cover" />
@@ -1779,23 +1802,16 @@ export default function App() {
                 )}
 
                 {formType === 'task' && (
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-1">
-                      <label className="block text-center text-sm font-medium text-foreground">Início</label>
-                      <TimePickerDropdown 
-                        value={formStartTime} 
-                        onChange={setFormStartTime} 
-                      />
-                      <input type="hidden" name="startTime" value={formStartTime} />
-                    </div>
-                    <div className="space-y-1">
-                      <label className="block text-center text-sm font-medium text-foreground">Término</label>
-                      <TimePickerDropdown 
-                        value={formEndTime} 
-                        onChange={setFormEndTime} 
-                      />
-                      <input type="hidden" name="endTime" value={formEndTime} />
-                    </div>
+                  <div className="space-y-1">
+                    <label className="block text-center text-sm font-medium text-foreground">Horário</label>
+                    <TimeRangePickerDropdown 
+                      startTime={formStartTime}
+                      onChangeStartTime={setFormStartTime}
+                      endTime={formEndTime}
+                      onChangeEndTime={setFormEndTime}
+                    />
+                    <input type="hidden" name="startTime" value={formStartTime} />
+                    <input type="hidden" name="endTime" value={formEndTime} />
                   </div>
                 )}
                 
@@ -1805,7 +1821,7 @@ export default function App() {
                   </button>
                 </div>
               </form>
-            </motion.div>
+            </div>
           </div>
         )}
       </AnimatePresence>
@@ -1866,7 +1882,7 @@ export default function App() {
                       }
                     }}
                     className={cn(
-                      "w-full border-[0.5px] rounded-2xl px-12 py-4 text-center text-lg tracking-widest italic focus:outline-none transition-all text-[#00cc00]",
+                      "w-full border-[0.5px] rounded-2xl px-12 py-4 text-center text-lg tracking-widest italic focus:outline-none transition-all text-primary",
                       darkMode ? "bg-[#262626]" : "bg-[#E2E2E2]",
                       authError ? "border-destructive ring-1 ring-destructive" : (darkMode ? "border-[#F7F7F7]/30" : "border-[#121212]/30")
                     )}
@@ -1874,7 +1890,7 @@ export default function App() {
                   <button 
                     type="button"
                     onClick={() => setShowAdminPassword(!showAdminPassword)}
-                    className="absolute right-4 top-1/2 -translate-y-1/2 text-[#00cc00] z-10"
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-primary z-10"
                   >
                     {showAdminPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                   </button>
