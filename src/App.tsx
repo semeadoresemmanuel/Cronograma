@@ -682,10 +682,6 @@ export default function App() {
 
   useEffect(() => { localStorage.setItem('smd_view', JSON.stringify(viewMode)); }, [viewMode]);
   
-  useEffect(() => { 
-    // Data sync handled by Firebase on individual actions
-  }, [items]);
-
   const displayDates = useMemo(() => {
     try {
       const today = currentDate;
@@ -751,11 +747,22 @@ export default function App() {
     if (editingItem) {
       const updatedItem = { ...editingItem, ...itemData };
       setItems(items.map(item => item.id === editingItem.id ? updatedItem : item));
-      setDoc(doc(db, 'items', updatedItem.id), { ...updatedItem, date: updatedItem.date.toISOString() });
+      const docData = { ...updatedItem, date: updatedItem.date.toISOString() };
+      const cleanDocData = Object.fromEntries(
+        Object.entries(docData).filter(([_, v]) => v !== undefined)
+      );
+      setDoc(doc(db, 'items', updatedItem.id), cleanDocData)
+        .catch(err => console.error("Firebase SETDOC Edit Error: ", err));
     } else {
       const newItem = { id: generateUUID(), ...itemData };
       setItems([...items, newItem]);
-      setDoc(doc(db, 'items', newItem.id), { ...newItem, date: newItem.date.toISOString() });
+      const docData = { ...newItem, date: newItem.date.toISOString() };
+      const cleanDocData = Object.fromEntries(
+        Object.entries(docData).filter(([_, v]) => v !== undefined)
+      );
+      setDoc(doc(db, 'items', newItem.id), cleanDocData)
+        .then(() => console.log("Firebase SETDOC Create Success! ID:", newItem.id))
+        .catch(err => console.error("Firebase SETDOC Create Error: ", err));
       sendNotification(newItem);
     }
     
@@ -1850,7 +1857,7 @@ export default function App() {
                     }}
                     onKeyDown={(e) => {
                       if (e.key === 'Enter') {
-                        if (adminPassword === 'admsemeadores*' || (typeof window !== 'undefined' && isLocalhost(window.location.hostname))) {
+                        if (adminPassword === 'admsemeadores*') {
                           setIsAdmin(true);
                           setIsAuthModalOpen(false);
                         } else {
@@ -1884,7 +1891,7 @@ export default function App() {
                 <div className="pt-4">
                   <button 
                     onClick={() => {
-                      if (adminPassword === 'admsemeadores*' || (typeof window !== 'undefined' && isLocalhost(window.location.hostname))) {
+                      if (adminPassword === 'admsemeadores*') {
                         setIsAdmin(true);
                         setIsAuthModalOpen(false);
                       } else {
