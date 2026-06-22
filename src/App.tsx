@@ -276,15 +276,11 @@ const getModalidadeColor = (modalidade?: string): string => {
   switch (modalidade) {
     case 'Abertura':
     case 'Encerramento':
-      return '#CAD100ff'; // Amarelo Dourado (#CAD100)
-    case 'O Livro dos Espíritos':
-      return 'var(--primary)'; // Verde
-    case 'Reforma Íntima':
-      return '#FF69B4ff'; // Rosa
     case 'Especial':
-      return '#9400D3ff'; // Roxo
+    case 'O Livro dos Espíritos':
     case 'Prática':
-      return '#1E90FFff'; // Azul
+    case 'Reforma Íntima':
+      return 'var(--primary)'; // Verde (#009C00 no Light, #00cc00 no Dark)
     case 'Ponto Facultativo':
       return '#FF8C00ff'; // Laranja
     case 'Feriado':
@@ -593,10 +589,7 @@ export default function App() {
     return saved ? JSON.parse(saved) : false;
   });
   
-  const [viewMode, setViewMode] = useState<ViewMode>(() => {
-    const saved = localStorage.getItem('smd_view');
-    return saved ? JSON.parse(saved) : 'MONTH';
-  });
+  const [viewMode, setViewMode] = useState<ViewMode>('DAY');
 
   const [selectedMonthInYearView, setSelectedMonthInYearView] = useState<Date | null>(null);
 
@@ -627,8 +620,8 @@ export default function App() {
         }
       });
       setItems(fetchedItems);
-    }, (error) => {
-      console.error("Firebase error: ", error);
+    }, () => {
+      // Erro tratado silenciosamente em produção
     });
 
     return () => unsubscribe();
@@ -765,8 +758,7 @@ export default function App() {
       const cleanDocData = Object.fromEntries(
         Object.entries(docData).filter(([_, v]) => v !== undefined)
       );
-      setDoc(doc(db, 'items', updatedItem.id), cleanDocData)
-        .catch(err => console.error("Firebase SETDOC Edit Error: ", err));
+      setDoc(doc(db, 'items', updatedItem.id), cleanDocData).catch(() => {});
     } else {
       const newItem = { id: generateUUID(), ...itemData };
       setItems([...items, newItem]);
@@ -774,9 +766,7 @@ export default function App() {
       const cleanDocData = Object.fromEntries(
         Object.entries(docData).filter(([_, v]) => v !== undefined)
       );
-      setDoc(doc(db, 'items', newItem.id), cleanDocData)
-        .then(() => console.log("Firebase SETDOC Create Success! ID:", newItem.id))
-        .catch(err => console.error("Firebase SETDOC Create Error: ", err));
+      setDoc(doc(db, 'items', newItem.id), cleanDocData).catch(() => {});
       sendNotification(newItem);
     }
     
@@ -894,7 +884,7 @@ export default function App() {
         {activeTab === 'cronograma' && (
           <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
               <div className="flex justify-center w-full mb-6 -mt-2">
-                <div className={cn("flex gap-1 p-1 rounded-full flex-shrink-0 relative w-[190px] sm:w-[220px] h-[30px] items-center justify-center", darkMode ? "bg-[#262626ff]" : "bg-[#E2E2E2]")}>
+                <div className={cn("flex p-1 rounded-full flex-shrink-0 relative w-[190px] sm:w-[220px] h-[30px]", darkMode ? "bg-[#262626ff]" : "bg-[#E2E2E2]")}>
                     {(['DAY', 'MONTH', 'YEAR'] as const).map(mode => (
                       <button
                         key={mode}
@@ -903,7 +893,7 @@ export default function App() {
                           if (mode === 'YEAR') setSelectedMonthInYearView(null);
                         }}
                         className={cn(
-                          "px-3 sm:px-4 h-full flex items-center rounded-full text-xs font-display font-bold uppercase tracking-wider transition-colors relative",
+                          "flex-1 flex items-center justify-center rounded-full text-xs font-display font-bold uppercase tracking-wider transition-colors relative",
                           viewMode === mode ? "text-primary" : (darkMode ? "text-[#f7f7f7ff] hover:text-primary/80" : "text-[#121212ff] hover:text-primary/80")
                         )}
                       >
@@ -915,7 +905,7 @@ export default function App() {
                           />
                         )}
                         <span className="relative z-10">
-                          {mode === 'DAY' ? 'Semana' : mode === 'MONTH' ? 'Mês' : 'Ano'}
+                          {mode === 'DAY' ? 'Dia' : mode === 'MONTH' ? 'Mês' : 'Ano'}
                         </span>
                       </button>
                     ))}
@@ -1099,78 +1089,92 @@ export default function App() {
                               );
                             }
                             return dayItems.map(item => (
-                              <div key={item.id} className="p-6 rounded-2xl bg-card border border-border shadow-sm hover:shadow-lg transition-all flex flex-row items-center gap-6 group">
-                                {item.type !== 'task' && (
-                                  <div className="shrink-0">
-                                    <div 
-                                      onClick={() => item.cover && setSelectedImage({url: item.cover, title: item.title})}
-                                      className={cn(
-                                        "w-20 h-20 border rounded-xl overflow-hidden relative flex items-center justify-center bg-muted/20 shrink-0",
-                                        item.cover ? "cursor-zoom-in" : ""
-                                      )}
-                                    >
-                                      {item.cover ? (
-                                        <img 
-                                          src={item.cover} 
-                                          alt="Capa" 
-                                          className="absolute inset-0 w-full h-full object-cover" 
-                                        />
-                                      ) : (
-                                        <span className="text-[8px] font-black uppercase tracking-tighter text-muted-foreground/20 text-center px-1">Sem Capa</span>
-                                      )}
-                                    </div>
+                              <div key={item.id} className="p-6 rounded-2xl bg-card border border-border shadow-sm hover:shadow-lg transition-all flex flex-col gap-4 group">
+                                {/* Topo - Canto esquerdo (Tema), Canto direito (Modalidade) */}
+                                <div className="w-full flex justify-between items-center gap-4">
+                                  <h4 className="text-base font-display font-black text-foreground tracking-tight text-left leading-tight">{item.title}</h4>
+                                  {item.modalidade && (
+                                    <>
+                                      <div className={cn(
+                                        "h-8 w-[0.5px] shrink-0 mx-1",
+                                        darkMode ? "bg-zinc-600" : "bg-zinc-500"
+                                      )} />
+                                      <span 
+                                        className="text-sm font-black uppercase tracking-widest italic shrink-0"
+                                        style={{ color: getModalidadeColor(item.modalidade) }}
+                                      >
+                                        {item.modalidade}
+                                      </span>
+                                    </>
+                                  )}
+                                </div>
+
+                                {/* Meio - Capa e Descrição (centralizados) */}
+                                {(item.type !== 'task' || item.description) && (
+                                  <div className="flex flex-col items-center gap-3 py-1 w-full">
+                                    {item.type !== 'task' && (
+                                      <div className={cn(
+                                        "p-1.5 border-[0.5px] rounded-[1.5rem] shrink-0 w-full max-w-[252px]",
+                                        darkMode ? "border-zinc-600" : "border-zinc-500"
+                                      )}>
+                                        <div 
+                                          onClick={() => item.cover && setSelectedImage({url: item.cover, title: item.title})}
+                                          className={cn(
+                                            "w-full aspect-square border rounded-2xl overflow-hidden relative flex items-center justify-center bg-muted/20",
+                                            item.cover ? "cursor-zoom-in" : ""
+                                          )}
+                                        >
+                                          {item.cover ? (
+                                            <img 
+                                              src={item.cover} 
+                                              alt="Capa" 
+                                              className="absolute inset-0 w-full h-full object-cover" 
+                                            />
+                                          ) : (
+                                            <span className="text-[8px] font-black uppercase tracking-tighter text-muted-foreground/20 text-center px-1">Sem Capa</span>
+                                          )}
+                                        </div>
+                                      </div>
+                                    )}
+                                    {item.description && (
+                                      <p className="text-sm text-muted-foreground leading-relaxed text-center max-w-xl">{item.description}</p>
+                                    )}
                                   </div>
                                 )}
-                                <div className="flex-1 flex flex-col gap-2">
-                                  <div className="w-full text-right leading-snug">
-                                    <h4 className="text-base font-display font-black text-foreground tracking-tight inline">{item.title}</h4>
-                                    {item.modalidade && (
-                                      <span className="inline-block whitespace-nowrap align-baseline ml-2">
-                                        <span className="text-muted-foreground/30 font-light mr-2">|</span>
-                                        <span 
-                                          className="text-[11px] font-black uppercase tracking-widest italic"
-                                          style={{ color: getModalidadeColor(item.modalidade) }}
-                                        >
-                                          {item.modalidade}
-                                        </span>
-                                      </span>
-                                    )}
-                                  </div>
-                                  {item.description && (
-                                    <p className="text-sm text-muted-foreground leading-relaxed text-right">{item.description}</p>
+
+                                {/* Base - Horário (centralizado) e Botões de Admin (Canto inferior direito) */}
+                                <div className="w-full flex justify-center items-center relative min-h-8 mt-1">
+                                  {(item.startTime || item.endTime) && (
+                                    <div className={cn(
+                                      "flex items-center gap-2 px-3 h-8 rounded-full text-xs font-medium border-[0.5px] bg-transparent whitespace-nowrap",
+                                      darkMode ? "border-zinc-600 text-[#f7f7f7ff]" : "border-zinc-500 text-black"
+                                    )}>
+                                      <Clock className="w-3.5 h-3.5 text-primary" />
+                                      <span>{item.startTime}{item.startTime && item.endTime ? ' - ' : ''}{item.endTime}</span>
+                                    </div>
                                   )}
-                                  <div className="flex items-center justify-end gap-3 mt-auto pt-2">
-                                    {(item.startTime || item.endTime) && (
-                                      <div className={cn(
-                                        "flex items-center gap-2 px-3 h-8 rounded-full text-xs font-medium border-[0.5px] bg-transparent whitespace-nowrap",
-                                        darkMode ? "border-zinc-600 text-[#f7f7f7ff]" : "border-zinc-500 text-black"
-                                      )}>
-                                        <Clock className="w-3.5 h-3.5 text-primary" />
-                                        <span>{item.startTime}{item.startTime && item.endTime ? ' - ' : ''}{item.endTime}</span>
-                                      </div>
-                                    )}
-                                    {isAdmin && (
+
+                                  {isAdmin && (
+                                    <div 
+                                      className={cn(
+                                        "absolute right-0 flex items-center gap-0 border-[0.5px] rounded-full h-8 px-1 bg-transparent",
+                                        darkMode ? "border-zinc-600" : "border-zinc-500"
+                                      )}
+                                    >
+                                      <button onClick={() => openAddModal(item.date, item)} className="p-1 rounded-full transition-colors text-primary/70 hover:text-primary hover:bg-primary/10">
+                                        <Pencil className="w-4 h-4" />
+                                      </button>
                                       <div 
                                         className={cn(
-                                          "flex items-center gap-0 border-[0.5px] rounded-full h-8 px-1 bg-transparent",
-                                          darkMode ? "border-zinc-600" : "border-zinc-500"
+                                          "h-4 mx-1 w-[0.5px]",
+                                          darkMode ? "bg-zinc-600" : "bg-zinc-500"
                                         )}
-                                      >
-                                        <button onClick={() => openAddModal(item.date, item)} className="p-1 rounded-full transition-colors text-primary/70 hover:text-primary hover:bg-primary/10">
-                                          <Pencil className="w-4 h-4" />
-                                        </button>
-                                        <div 
-                                          className={cn(
-                                            "h-4 mx-1 w-[0.5px]",
-                                            darkMode ? "bg-zinc-600" : "bg-zinc-500"
-                                          )}
-                                        />
-                                        <button onClick={(e) => { e.stopPropagation(); setItemToDelete(item.id); setIsDeleteConfirmOpen(true); }} className="p-1 text-destructive/70 hover:text-destructive hover:bg-destructive/10 rounded-full transition-colors">
-                                          <Trash className="w-4 h-4" />
-                                        </button>
-                                      </div>
-                                    )}
-                                  </div>
+                                      />
+                                      <button onClick={(e) => { e.stopPropagation(); setItemToDelete(item.id); setIsDeleteConfirmOpen(true); }} className="p-1 text-destructive/70 hover:text-destructive hover:bg-destructive/10 rounded-full transition-colors">
+                                        <Trash className="w-4 h-4" />
+                                      </button>
+                                    </div>
+                                  )}
                                 </div>
                               </div>
                             ));
@@ -1546,7 +1550,7 @@ export default function App() {
                           >
                             <div className="p-1 flex flex-col gap-1">
                               {(formType === 'task' 
-                                ? ['Apoio Operacional', 'Audiovisual', 'Divulgação', 'Informações', 'Recepção']
+                                ? ['Música', 'Recepção', 'Som']
                                 : ['Abertura', 'Encerramento', 'Especial', 'Feriado', 'O Livro dos Espíritos', 'Ponto Facultativo', 'Prática', 'Reforma Íntima']
                               ).map(opt => (
                                 <button
@@ -1744,7 +1748,7 @@ export default function App() {
                                 const img = new Image();
                                 img.onload = () => {
                                   const canvas = document.createElement('canvas');
-                                  const MAX_SIZE = 400;
+                                  const MAX_SIZE = 1600;
                                   let width = img.width;
                                   let height = img.height;
                                   if (width > height) {
@@ -1761,8 +1765,42 @@ export default function App() {
                                   canvas.width = width;
                                   canvas.height = height;
                                   const ctx = canvas.getContext('2d');
-                                  ctx?.drawImage(img, 0, 0, width, height);
-                                  setFormCover(canvas.toDataURL('image/jpeg', 0.8));
+                                  if (ctx) {
+                                    let sourceCanvas = document.createElement('canvas');
+                                    sourceCanvas.width = img.width;
+                                    sourceCanvas.height = img.height;
+                                    const sourceCtx = sourceCanvas.getContext('2d');
+                                    if (sourceCtx) {
+                                      sourceCtx.drawImage(img, 0, 0);
+                                      
+                                      let curWidth = img.width;
+                                      let curHeight = img.height;
+                                      
+                                      while (curWidth * 0.5 > width) {
+                                        const stepCanvas = document.createElement('canvas');
+                                        stepCanvas.width = Math.round(curWidth * 0.5);
+                                        stepCanvas.height = Math.round(curHeight * 0.5);
+                                        const stepCtx = stepCanvas.getContext('2d');
+                                        if (stepCtx) {
+                                          stepCtx.imageSmoothingEnabled = true;
+                                          stepCtx.imageSmoothingQuality = 'high';
+                                          stepCtx.drawImage(sourceCanvas, 0, 0, stepCanvas.width, stepCanvas.height);
+                                        }
+                                        sourceCanvas = stepCanvas;
+                                        curWidth = stepCanvas.width;
+                                        curHeight = stepCanvas.height;
+                                      }
+                                      
+                                      ctx.imageSmoothingEnabled = true;
+                                      ctx.imageSmoothingQuality = 'high';
+                                      ctx.drawImage(sourceCanvas, 0, 0, width, height);
+                                    } else {
+                                      ctx.imageSmoothingEnabled = true;
+                                      ctx.imageSmoothingQuality = 'high';
+                                      ctx.drawImage(img, 0, 0, width, height);
+                                    }
+                                  }
+                                  setFormCover(canvas.toDataURL('image/jpeg', 0.85));
                                 };
                                 img.src = reader.result as string;
                               };
