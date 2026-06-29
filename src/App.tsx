@@ -7,6 +7,7 @@ import {
   addMonths, 
   startOfMonth, 
   endOfMonth,
+  endOfDay,
   isSameDay,
   parseISO,
   isAfter,
@@ -45,6 +46,7 @@ import adminPadlock from '@/src/elements/admin_padlock.svg';
 import adminPadlockUnlock from '@/src/elements/admin_padlock_unlock.svg';
 import taskMode from '@/src/elements/task_mode.svg';
 import timelineMode from '@/src/elements/timeline_mode.svg';
+import birthdayIcon from '@/src/elements/birthday.svg';
 
 const generateUUID = (): string => {
   if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
@@ -56,6 +58,29 @@ const generateUUID = (): string => {
     return v.toString(16);
   });
 };
+
+const MEMBER_BIRTHDAYS = [
+  { name: 'Luana', day: 10, month: 0 },
+  { name: 'Eder', day: 31, month: 0 },
+  { name: 'Amanda', day: 17, month: 1 },
+  { name: 'Jean', day: 23, month: 1 },
+  { name: 'Gilberto', day: 6, month: 2 },
+  { name: 'Vitória', day: 19, month: 2 },
+  { name: 'Carlos Henrique', day: 22, month: 2 },
+  { name: 'Vinicius', day: 29, month: 4 },
+  { name: 'Camila', day: 16, month: 5 },
+  { name: 'Alexandre', day: 4, month: 6 },
+  { name: 'Alessandra', day: 21, month: 6 },
+  { name: 'Elizangela', day: 5, month: 7 },
+  { name: 'Carla', day: 17, month: 7 },
+  { name: 'Caio', day: 4, month: 8 },
+  { name: 'Ruth', day: 25, month: 9 },
+  { name: 'Wallace', day: 12, month: 10 },
+  { name: 'Maria de Lourdes', day: 14, month: 10 },
+  { name: 'Clara', day: 27, month: 10 },
+  { name: 'Humberto', day: 5, month: 11 },
+  { name: 'Adrielly', day: 19, month: 11 }
+];
 
 type Tab = 'cronograma' | 'tarefas';
 type ViewMode = 'DAY' | 'MONTH' | 'YEAR';
@@ -640,9 +665,10 @@ export default function App() {
     if (mondays.length === 0) return today;
     const lastMonday = mondays[mondays.length - 1];
     // If the last meeting of the month has passed, start showing the next month
-    return isAfter(today, lastMonday) ? startOfMonth(addMonths(today, 1)) : today;
+    return isAfter(today, endOfDay(lastMonday)) ? startOfMonth(addMonths(today, 1)) : today;
   });
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isBirthdayModalOpen, setIsBirthdayModalOpen] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [editingItem, setEditingItem] = useState<CalendarItem | null>(null);
   const [selectedModalidade, setSelectedModalidade] = useState<string>('');
@@ -696,7 +722,7 @@ export default function App() {
       const mondays = eachDayOfInterval({ start: startOfMonth(today), end: monthEnd }).filter(d => isMonday(d));
       const lastMonday = mondays[mondays.length - 1] || today;
       // Use startOfMonth when advancing to ensure we don't skip to the end of the next month
-      const effectiveMonthDate = isAfter(today, lastMonday) ? startOfMonth(addMonths(today, 1)) : today;
+      const effectiveMonthDate = isAfter(today, endOfDay(lastMonday)) ? startOfMonth(addMonths(today, 1)) : today;
       
       if (viewMode === 'YEAR' && selectedMonthInYearView) {
         const interval = eachDayOfInterval({ 
@@ -724,9 +750,6 @@ export default function App() {
     return eachMonthOfInterval({
       start: startOfYear(currentDate),
       end: endOfYear(currentDate)
-    }).filter(month => {
-      const m = month.getMonth();
-      return m > 0 && m < 11;
     });
   }, [currentDate]);
 
@@ -790,8 +813,8 @@ export default function App() {
       setFormStartTime(item.startTime || "00:00");
       setFormEndTime(item.endTime || "00:00");
     } else {
-      setFormStartTime(type === 'task' ? "18:45" : "00:00");
-      setFormEndTime(type === 'task' ? "19:15" : "00:00");
+      setFormStartTime("00:00");
+      setFormEndTime("00:00");
     }
     
     setIsModalOpen(true);
@@ -912,14 +935,27 @@ export default function App() {
                 </div>
               </div>
               {(viewMode === 'MONTH' || (viewMode === 'YEAR' && selectedMonthInYearView)) && (
-                <div className="flex flex-col items-center justify-center mb-4 pb-2 border-b border-border">
-                  <div className="flex items-center gap-6">
+                <div className="relative w-full flex flex-col items-center justify-center mb-4 pb-2 border-b border-border">
+                  {(viewMode === 'MONTH' || (viewMode === 'YEAR' && selectedMonthInYearView)) && 
+                   MEMBER_BIRTHDAYS.some(b => b.month === ((viewMode === 'YEAR' && selectedMonthInYearView) ? selectedMonthInYearView : currentDate).getMonth()) && (
+                    <button 
+                      onClick={() => setIsBirthdayModalOpen(true)}
+                      className="absolute right-2 md:right-4 top-1.5 p-1 rounded-xl transition-all duration-200 cursor-pointer flex items-center justify-center hover:bg-card"
+                      title="Aniversariantes do Mês"
+                    >
+                      <img 
+                        src={birthdayIcon} 
+                        className="w-7 h-7 theme-icon-green object-contain" 
+                        alt="Aniversariantes" 
+                      />
+                    </button>
+                  )}
+                  <div className="flex items-center gap-3">
                     {viewMode === 'YEAR' && (
                       <button 
                         onClick={() => {
                           if (selectedMonthInYearView) {
-                            const prev = addMonths(selectedMonthInYearView, -1);
-                            setSelectedMonthInYearView(prev.getMonth() === 0 ? addMonths(selectedMonthInYearView, -3) : prev);
+                            setSelectedMonthInYearView(addMonths(selectedMonthInYearView, -1));
                           }
                         }}
                         className="p-1 transition-colors text-primary hover:opacity-70"
@@ -928,7 +964,7 @@ export default function App() {
                       </button>
                     )}
                     
-                    <h2 className="text-3xl font-black tracking-tight text-foreground uppercase font-display text-center min-w-[180px]">
+                    <h2 className="text-3xl font-black tracking-tight text-foreground uppercase font-display text-center min-w-[130px]">
                       {(() => {
                         if (viewMode === 'MONTH') {
                           return format(currentDate, 'MMMM', { locale: ptBR });
@@ -941,8 +977,7 @@ export default function App() {
                       <button 
                         onClick={() => {
                           if (selectedMonthInYearView) {
-                            const next = addMonths(selectedMonthInYearView, 1);
-                            setSelectedMonthInYearView(next.getMonth() === 11 ? addMonths(selectedMonthInYearView, 3) : next);
+                            setSelectedMonthInYearView(addMonths(selectedMonthInYearView, 1));
                           }
                         }}
                         className="p-1 transition-colors text-primary hover:opacity-70"
@@ -970,7 +1005,7 @@ export default function App() {
                     const monthEnd = endOfMonth(today);
                     const mondays = eachDayOfInterval({ start: startOfMonth(today), end: monthEnd }).filter(d => isMonday(d));
                     const lastMonday = mondays[mondays.length - 1];
-                    const effectiveMonthDate = isAfter(today, lastMonday) ? addMonths(today, 1) : today;
+                    const effectiveMonthDate = isAfter(today, endOfDay(lastMonday)) ? addMonths(today, 1) : today;
                     const isCurrentMonth = isSameMonth(month, effectiveMonthDate);
                     
                     return (
@@ -981,7 +1016,7 @@ export default function App() {
                           "p-6 lg:p-5 rounded-3xl border transition-all text-left group relative overflow-hidden",
                           darkMode ? "bg-[#262626]" : "bg-[#E2E2E2]",
                           "border-border hover:border-primary/50 hover:shadow-md",
-                          index === yearMonths.length - 1 && "lg:col-start-2"
+                          yearMonths.length % 3 === 1 && index === yearMonths.length - 1 && "lg:col-start-2"
                         )}
                       >
                         {isCurrentMonth && (
@@ -1094,18 +1129,18 @@ export default function App() {
                                 <div className="w-full flex justify-between items-center gap-4">
                                   <h4 className="text-base font-display font-black text-foreground tracking-tight text-left leading-tight">{item.title}</h4>
                                   {item.modalidade && (
-                                    <>
+                                    <div className="flex items-center gap-3 shrink-0">
                                       <div className={cn(
-                                        "h-8 w-[0.5px] shrink-0 mx-1",
+                                        "h-8 w-[0.5px]",
                                         darkMode ? "bg-zinc-600" : "bg-zinc-500"
                                       )} />
                                       <span 
-                                        className="text-sm font-black uppercase tracking-widest italic shrink-0"
+                                        className="text-sm font-black uppercase tracking-widest italic"
                                         style={{ color: getModalidadeColor(item.modalidade) }}
                                       >
                                         {item.modalidade}
                                       </span>
-                                    </>
+                                    </div>
                                   )}
                                 </div>
 
@@ -1711,14 +1746,13 @@ export default function App() {
                       <div className="space-y-1">
                         <label className="block text-center text-sm font-medium text-foreground">Horário</label>
                         <TimeRangePickerDropdown 
-                          startTime={selectedModalidade === 'Prática' ? "18:45" : formStartTime}
+                          startTime={formStartTime}
                           onChangeStartTime={setFormStartTime}
-                          endTime={selectedModalidade === 'Prática' ? "20:00" : formEndTime}
+                          endTime={formEndTime}
                           onChangeEndTime={setFormEndTime}
-                          disabled={selectedModalidade === 'Prática'}
                         />
-                        <input type="hidden" name="startTime" value={selectedModalidade === 'Prática' ? "18:45" : formStartTime} />
-                        <input type="hidden" name="endTime" value={selectedModalidade === 'Prática' ? "20:00" : formEndTime} />
+                        <input type="hidden" name="startTime" value={formStartTime} />
+                        <input type="hidden" name="endTime" value={formEndTime} />
                       </div>
                     )}
                     
@@ -1860,6 +1894,92 @@ export default function App() {
                 </div>
               </form>
             </div>
+          </div>
+        )}
+      </AnimatePresence>
+      {/* Birthday Modal */}
+      <AnimatePresence>
+        {isBirthdayModalOpen && (
+          <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center pointer-events-none">
+            <div 
+              onClick={() => setIsBirthdayModalOpen(false)} 
+              className="absolute inset-0 bottom-sheet-overlay pointer-events-auto" 
+            />
+            <motion.div 
+              initial={{ opacity: 0, y: 100 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 100 }}
+              transition={{ type: "spring", damping: 25, stiffness: 250 }}
+              className="w-full sm:max-w-md bg-background sm:rounded-[2rem] rounded-t-[2rem] shadow-2xl relative z-10 pointer-events-auto max-h-[90vh] flex flex-col overflow-hidden"
+            >
+              <div className="sticky top-0 bg-background z-20 pt-5 pb-3 px-6 flex items-center justify-center border-b border-border">
+                <div className="w-12 h-1.5 bg-muted rounded-full absolute top-2 left-1/2 -translate-x-1/2 sm:hidden" />
+                <h2 className="text-lg font-bold uppercase text-primary">
+                  ANIVERSARIANTE(S) DO MÊS
+                </h2>
+                <button 
+                  type="button" 
+                  onClick={() => setIsBirthdayModalOpen(false)} 
+                  className="p-2 bg-muted hover:bg-muted-foreground/20 rounded-full transition-colors absolute right-4"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              <div className="p-6 space-y-6 overflow-y-auto no-scrollbar">
+                <div className="text-center space-y-1">
+                  <span className="text-xs font-bold uppercase tracking-widest text-primary">
+                    {format((viewMode === 'YEAR' && selectedMonthInYearView) ? selectedMonthInYearView : currentDate, 'MMMM', { locale: ptBR })}
+                  </span>
+                  <h3 className="text-2xl font-black text-foreground uppercase tracking-tight">
+                    Parabéns aos Celebrados!
+                  </h3>
+                </div>
+
+                <div className="space-y-3">
+                  {(() => {
+                    const targetMonth = ((viewMode === 'YEAR' && selectedMonthInYearView) ? selectedMonthInYearView : currentDate).getMonth();
+                    const filtered = MEMBER_BIRTHDAYS.filter(b => b.month === targetMonth)
+                      .sort((a, b) => a.day - b.day);
+                    if (filtered.length === 0) {
+                      return (
+                        <div className="text-center py-8 text-muted-foreground italic">
+                          Nenhum aniversariante neste mês.
+                        </div>
+                      );
+                    }
+                    return filtered.map(birthday => {
+                      const isToday = birthday.day === new Date().getDate() && birthday.month === new Date().getMonth();
+                      return (
+                        <div 
+                          key={birthday.name} 
+                          className={cn(
+                            "p-4 rounded-2xl flex items-center justify-between border transition-all duration-300",
+                            isToday 
+                              ? "bg-primary/10 border-primary shadow-sm" 
+                              : "bg-card/50 border-border"
+                          )}
+                        >
+                          <div>
+                            <p className="font-bold text-foreground">{birthday.name}</p>
+                          </div>
+                          <div className="text-right">
+                            <p className="font-bold text-primary text-lg">
+                              {String(birthday.day).padStart(2, '0')}/{String(birthday.month + 1).padStart(2, '0')}
+                            </p>
+                            {isToday && (
+                              <span className="text-[10px] font-bold uppercase tracking-wider bg-primary text-primary-foreground px-2 py-0.5 rounded-full block mt-1">
+                                HOJE!
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    });
+                  })()}
+                </div>
+              </div>
+            </motion.div>
           </div>
         )}
       </AnimatePresence>
