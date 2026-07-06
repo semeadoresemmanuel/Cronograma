@@ -110,8 +110,9 @@
     @apply border-border;
   }
   html, body {
-    scrollbar-width: none; /* Firefox */
     -ms-overflow-style: none; /* IE and Edge */
+    scrollbar-width: none; /* Firefox */
+    overscroll-behavior-y: none; /* Block native pull-to-refresh */
   }
   html::-webkit-scrollbar, body::-webkit-scrollbar {
     display: none; /* Chrome, Safari, Opera */
