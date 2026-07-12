@@ -760,6 +760,21 @@ export default function App() {
   }, [darkMode]);
 
   useEffect(() => { localStorage.setItem('smd_view', JSON.stringify(viewMode)); }, [viewMode]);
+
+  useEffect(() => {
+    const isAnyModalOpen = isModalOpen || isBirthdayModalOpen || isAuthModalOpen || isDeleteConfirmOpen || !!selectedImage;
+    if (isAnyModalOpen) {
+      document.documentElement.style.overflow = 'hidden';
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.documentElement.style.overflow = '';
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.documentElement.style.overflow = '';
+      document.body.style.overflow = '';
+    };
+  }, [isModalOpen, isBirthdayModalOpen, isAuthModalOpen, isDeleteConfirmOpen, selectedImage]);
   
   const displayDates = useMemo(() => {
     try {
