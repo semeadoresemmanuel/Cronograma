@@ -1247,23 +1247,19 @@ export default function App() {
                             }
                             return dayItems.map(item => (
                               <div key={item.id} className="p-6 rounded-2xl bg-card border border-border shadow-sm hover:shadow-lg transition-all flex flex-col gap-4 group">
-                                {/* Topo - Canto esquerdo (Tema), Canto direito (Modalidade) */}
-                                <div className="w-full flex justify-between items-center gap-4">
-                                  <h4 className="text-base font-display font-black text-foreground tracking-tight text-left leading-tight">{item.title}</h4>
+                                {/* Topo - Modalidade centralizada no alto, e abaixo o Tema */}
+                                <div className="w-full flex flex-col items-center gap-2">
                                   {item.modalidade && (
-                                    <div className="flex items-center gap-3 shrink-0">
-                                      <div className={cn(
-                                        "h-8 w-[0.5px]",
-                                        darkMode ? "bg-zinc-600" : "bg-zinc-500"
-                                      )} />
-                                      <span 
-                                        className="text-sm font-black uppercase tracking-widest italic"
-                                        style={{ color: getModalidadeColor(item.modalidade) }}
-                                      >
-                                        {item.modalidade}
-                                      </span>
-                                    </div>
+                                    <span 
+                                      className="text-sm font-black uppercase tracking-widest italic text-center"
+                                      style={{ color: getModalidadeColor(item.modalidade) }}
+                                    >
+                                      {item.modalidade}
+                                    </span>
                                   )}
+                                  <h4 className="text-base font-display font-black text-foreground tracking-tight text-center leading-tight">
+                                    {item.title}
+                                  </h4>
                                 </div>
 
                                 {/* Meio - Capa e Descrição (centralizados) */}
