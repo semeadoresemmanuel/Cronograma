@@ -859,7 +859,7 @@ export default function App() {
   };
 
   const openAddModal = (date: Date = new Date(), item?: CalendarItem, type: ItemType = 'event', category?: 'checklist' | 'responsavel' | 'orientacao') => {
-    const initialDate = item ? item.date : (type === 'task' ? null : date);
+    const initialDate = item ? item.date : date;
     setSelectedDate(initialDate);
     setSelectedDay(initialDate ? initialDate.getDate() : null);
     setSelectedMonth(initialDate ? initialDate.getMonth() : null);
