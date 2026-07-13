@@ -859,7 +859,7 @@ export default function App() {
   };
 
   const openAddModal = (date: Date = new Date(), item?: CalendarItem, type: ItemType = 'event', category?: 'checklist' | 'responsavel' | 'orientacao') => {
-    const initialDate = item ? item.date : date;
+    const initialDate = item ? item.date : (type === 'task' ? null : date);
     setSelectedDate(initialDate);
     setSelectedDay(initialDate ? initialDate.getDate() : null);
     setSelectedMonth(initialDate ? initialDate.getMonth() : null);
@@ -1408,7 +1408,7 @@ export default function App() {
                     {isAdmin && (
                       <div className="flex justify-center -mt-2 mb-4">
                         <button 
-                          onClick={() => openAddModal(today, undefined, 'task', 'checklist')} 
+                          onClick={() => openAddModal(activeTaskDate, undefined, 'task', 'checklist')} 
                           className="flex items-center w-[150px] sm:w-[180px] h-[30px] rounded-full transition-all duration-200 hover:scale-105 cursor-pointer font-bold text-[9px] sm:text-xs uppercase tracking-wider border-0 bg-card text-primary px-0"
                         >
                           <div className="flex items-center justify-center w-10 h-full gap-2.5 pl-1.5">
