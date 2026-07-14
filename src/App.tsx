@@ -1,3 +1,4 @@
+import { Header } from './components/layout/Header';
 // Refined visual theme and updated assets
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { 
@@ -28,7 +29,6 @@ import {
   ChevronLeft, 
   ChevronRight,
   ChevronDown,
-  ChevronUp,
   Trash,
   Pencil,
   Moon,
@@ -45,566 +45,16 @@ import { motion, AnimatePresence, Reorder } from 'motion/react';
 import { cn } from '@/src/lib/utils';
 import { CalendarItem, ItemType } from '@/src/types';
 
-import adminPadlock from '@/src/elements/admin_padlock.svg';
-import adminPadlockUnlock from '@/src/elements/admin_padlock_unlock.svg';
 import taskMode from '@/src/elements/task_mode.svg';
 import timelineMode from '@/src/elements/timeline_mode.svg';
 import birthdayIcon from '@/src/elements/birthday_cake.svg';
+import eyeIcon from '@/src/elements/eye.svg';
 
-const generateUUID = (): string => {
-  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
-    return crypto.randomUUID();
-  }
-  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
-    const r = (Math.random() * 16) | 0;
-    const v = c === 'x' ? r : (r & 0x3) | 0x8;
-    return v.toString(16);
-  });
-};
-
-const MEMBER_BIRTHDAYS = [
-  { name: 'Luana', day: 10, month: 0 },
-  { name: 'Eder', day: 31, month: 0 },
-  { name: 'Amanda', day: 17, month: 1 },
-  { name: 'Jean', day: 23, month: 1 },
-  { name: 'Gilberto', day: 6, month: 2 },
-  { name: 'Vitória', day: 19, month: 2 },
-  { name: 'Carlos Henrique', day: 22, month: 2 },
-  { name: 'Vinicius', day: 29, month: 4 },
-  { name: 'Camila', day: 16, month: 5 },
-  { name: 'Alexandre', day: 4, month: 6 },
-  { name: 'Alessandra', day: 21, month: 6 },
-  { name: 'Elizangela', day: 5, month: 7 },
-  { name: 'Carla', day: 17, month: 7 },
-  { name: 'Caio', day: 4, month: 8 },
-  { name: 'Ruth', day: 25, month: 9 },
-  { name: 'Wallace', day: 12, month: 10 },
-  { name: 'Maria de Lourdes', day: 14, month: 10 },
-  { name: 'Clara', day: 27, month: 10 },
-  { name: 'Humberto', day: 5, month: 11 },
-  { name: 'Adrielly', day: 19, month: 11 }
-];
-
-type Tab = 'cronograma' | 'tarefas';
-type ViewMode = 'DAY' | 'MONTH' | 'YEAR';
-
-
-
-const AdminIcon = ({ className, unlocked }: { className?: string; unlocked?: boolean }) => {
-  return (
-    <img 
-      src={unlocked ? adminPadlockUnlock : adminPadlock} 
-      className={cn("theme-icon-green", className)} 
-      alt={unlocked ? "Unlocked" : "Locked"} 
-    />
-  );
-};
-
-const generateNotificationBanner = (title: string, subtitle: string): string => {
-  if (typeof document === 'undefined') return '';
-  const canvas = document.createElement('canvas');
-  canvas.width = 600;
-  canvas.height = 300;
-  const ctx = canvas.getContext('2d');
-  if (!ctx) return '';
-
-  // 1. Create a beautiful green background gradient
-  const gradient = ctx.createLinearGradient(0, 0, 600, 300);
-  gradient.addColorStop(0, '#00e600'); // Vibrant green
-  gradient.addColorStop(0.5, '#00aa00'); // Medium green
-  gradient.addColorStop(1, '#005500'); // Deep forest green
-  ctx.fillStyle = gradient;
-  ctx.fillRect(0, 0, 600, 300);
-
-  // 2. Draw abstract decorative circles (glassmorphism/Google-style weather art)
-  ctx.fillStyle = 'rgba(255, 255, 255, 0.08)';
-  ctx.beginPath();
-  ctx.arc(520, 60, 140, 0, Math.PI * 2);
-  ctx.fill();
-
-  ctx.fillStyle = 'rgba(255, 255, 255, 0.05)';
-  ctx.beginPath();
-  ctx.arc(80, 240, 180, 0, Math.PI * 2);
-  ctx.fill();
-
-  ctx.fillStyle = 'rgba(255, 255, 255, 0.12)';
-  ctx.beginPath();
-  ctx.arc(480, 220, 90, 0, Math.PI * 2);
-  ctx.fill();
-
-  // 3. Draw a modern glass panel card in the center
-  ctx.fillStyle = 'rgba(255, 255, 255, 0.15)';
-  ctx.strokeStyle = 'rgba(255, 255, 255, 0.25)';
-  ctx.lineWidth = 1.5;
-  const x = 30, y = 30, w = 540, h = 240, r = 24;
-  ctx.beginPath();
-  ctx.moveTo(x + r, y);
-  ctx.lineTo(x + w - r, y);
-  ctx.quadraticCurveTo(x + w, y, x + w, y + r);
-  ctx.lineTo(x + w, y + h - r);
-  ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
-  ctx.lineTo(x + r, y + h);
-  ctx.quadraticCurveTo(x, y + h, x, y + h - r);
-  ctx.lineTo(x, y + r);
-  ctx.quadraticCurveTo(x, y, x + r, y);
-  ctx.closePath();
-  ctx.fill();
-  ctx.stroke();
-
-  // 4. Draw Icon Placeholder (Calendar Icon representation)
-  ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
-  ctx.beginPath();
-  ctx.arc(85, 80, 30, 0, Math.PI * 2);
-  ctx.fill();
-
-  // Calendar symbol lines
-  ctx.strokeStyle = '#ffffff';
-  ctx.lineWidth = 3;
-  ctx.lineCap = 'round';
-  ctx.lineJoin = 'round';
-  
-  // Draw outer calendar box in the circle
-  ctx.beginPath();
-  ctx.rect(73, 70, 24, 22);
-  ctx.stroke();
-  // Draw hanger tabs
-  ctx.beginPath();
-  ctx.moveTo(79, 66); ctx.lineTo(79, 70);
-  ctx.moveTo(91, 66); ctx.lineTo(91, 70);
-  ctx.stroke();
-  // Draw grid lines
-  ctx.lineWidth = 2;
-  ctx.beginPath();
-  ctx.moveTo(73, 77); ctx.lineTo(97, 77);
-  ctx.moveTo(81, 83); ctx.lineTo(81, 89);
-  ctx.moveTo(89, 83); ctx.lineTo(89, 89);
-  ctx.stroke();
-
-  // 5. Draw Text Details
-  // Header text
-  ctx.fillStyle = '#ffffff';
-  ctx.font = '600 16px "Space Grotesk", sans-serif';
-  ctx.fillText('CRONOGRAMA SEMEADORES', 135, 75);
-
-  // Divider line
-  ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
-  ctx.lineWidth = 1;
-  ctx.beginPath();
-  ctx.moveTo(135, 90);
-  ctx.lineTo(540, 90);
-  ctx.stroke();
-
-  // Event title
-  ctx.fillStyle = '#ffffff';
-  ctx.font = 'bold 26px "Space Grotesk", sans-serif';
-  // Wrap event title if it's too long
-  const maxTitleWidth = 390;
-  let titleLine1 = title;
-  let titleLine2 = '';
-  if (ctx.measureText(title).width > maxTitleWidth) {
-    const words = title.split(' ');
-    let currentLine = '';
-    for (let word of words) {
-      const testLine = currentLine ? `${currentLine} ${word}` : word;
-      if (ctx.measureText(testLine).width > maxTitleWidth) {
-        titleLine2 = title.substring(currentLine.length).trim();
-        titleLine1 = currentLine;
-        break;
-      }
-      currentLine = testLine;
-    }
-  }
-
-  ctx.fillText(titleLine1, 135, 130);
-  if (titleLine2) {
-    ctx.fillText(titleLine2, 135, 165);
-  }
-
-  // Event subtitle (date / time)
-  ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
-  ctx.font = '500 18px "Space Grotesk", sans-serif';
-  ctx.fillText(subtitle, 135, titleLine2 ? 210 : 185);
-
-  // Status/Google Weather vibe tag
-  ctx.fillStyle = 'rgba(255, 255, 255, 0.25)';
-  ctx.beginPath();
-  
-  // Use a fallback for roundRect in older canvas contexts
-  if (typeof ctx.roundRect === 'function') {
-    ctx.roundRect(135, titleLine2 ? 225 : 205, 140, 30, 15);
-  } else {
-    ctx.rect(135, titleLine2 ? 225 : 205, 140, 30);
-  }
-  ctx.fill();
-  
-  ctx.fillStyle = '#ffffff';
-  ctx.font = 'bold 12px "Space Grotesk", sans-serif';
-  ctx.textAlign = 'center';
-  ctx.fillText('AGENDA ATUALIZADA', 205, titleLine2 ? 244 : 224);
-  
-  return canvas.toDataURL('image/png');
-};
-
-const sendNotification = (item: CalendarItem) => {
-  if (typeof window === 'undefined' || !('Notification' in window)) return;
-
-  const trigger = () => {
-    const isTask = item.type === 'task';
-    const title = isTask ? 'Nova Tarefa Adicionada' : 'Novo Evento Adicionado';
-    const dateFormatted = format(item.date, "dd/MM/yyyy", { locale: ptBR });
-    const timeRange = item.startTime || item.endTime 
-      ? ` (${item.startTime}${item.startTime && item.endTime ? ' - ' : ''}${item.endTime})`
-      : '';
-    const body = `${item.title}\n📅 Data: ${dateFormatted}${timeRange}\n${item.description || ''}`;
-    
-    // Fallback to dynamic banner if no cover image
-    const bannerUrl = item.cover || generateNotificationBanner(
-      item.title, 
-      `${isTask ? 'Tarefa' : 'Evento'} • ${dateFormatted}${timeRange}`
-    );
-
-    const options: any = {
-      body: body,
-      icon: '/favicon.svg',
-      badge: '/favicon.svg',
-      image: bannerUrl,
-      vibrate: [200, 100, 200],
-      tag: `semeadores-item-${item.id}`,
-      data: {
-        url: window.location.origin
-      },
-      actions: [
-        { action: 'open', title: 'Abrir Aplicativo' }
-      ]
-    };
-
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.ready.then(registration => {
-        registration.showNotification(title, options);
-      }).catch(() => {
-        new Notification(title, options);
-      });
-    } else {
-      new Notification(title, options);
-    }
-  };
-
-  if (Notification.permission === 'granted') {
-    trigger();
-  } else if (Notification.permission === 'default') {
-    Notification.requestPermission().then(permission => {
-      if (permission === 'granted') {
-        trigger();
-      }
-    });
-  }
-};
-
-const getModalidadeColor = (modalidade?: string): string => {
-  switch (modalidade) {
-    case 'Abertura':
-    case 'Encerramento':
-    case 'Especial':
-    case 'O Livro dos Espíritos':
-    case 'Prática':
-    case 'Reforma Íntima':
-      return 'var(--primary)'; // Verde (#009C00 no Light, #00cc00 no Dark)
-    case 'Ponto Facultativo':
-      return '#FF8C00ff'; // Laranja
-    case 'Feriado':
-      return '#FF0000ff'; // Vermelho
-    default:
-      return 'var(--primary)'; // Default is green
-  }
-};
-
-const isLocalhost = (hostname: string): boolean => {
-  return (
-    hostname === 'localhost' ||
-    hostname === '127.0.0.1' ||
-    hostname === '::1' ||
-    hostname.startsWith('192.168.') ||
-    hostname.startsWith('10.') ||
-    hostname.startsWith('172.') ||
-    hostname.endsWith('.local')
-  );
-};
-
-interface ClockPickerWidgetProps {
-  value: string;
-  onChange: (val: string) => void;
-  label: string;
-}
-
-const ClockPickerWidget = ({ value, onChange, label }: ClockPickerWidgetProps) => {
-  const [hour, minute] = (value || "00:00").split(":");
-  const [tempHour, setTempHour] = useState(hour);
-  const [tempMinute, setTempMinute] = useState(minute);
-
-  useEffect(() => {
-    setTempHour(hour);
-  }, [hour]);
-
-  useEffect(() => {
-    setTempMinute(minute);
-  }, [minute]);
-
-  const handleHourChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    let val = e.target.value.replace(/\D/g, '');
-    if (val.length > 2) val = val.slice(-2);
-    setTempHour(val);
-    if (val.length === 2) {
-      const num = parseInt(val, 10);
-      if (!isNaN(num) && num >= 0 && num <= 23) {
-        onChange(`${num.toString().padStart(2, '0')}:${minute}`);
-      }
-    }
-  };
-
-  const handleHourBlur = () => {
-    let num = parseInt(tempHour, 10);
-    if (isNaN(num) || num < 0 || num > 23) num = 0;
-    const formatted = num.toString().padStart(2, '0');
-    setTempHour(formatted);
-    onChange(`${formatted}:${minute}`);
-  };
-
-  const handleMinuteChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    let val = e.target.value.replace(/\D/g, '');
-    if (val.length > 2) val = val.slice(-2);
-    setTempMinute(val);
-    if (val.length === 2) {
-      const num = parseInt(val, 10);
-      if (!isNaN(num) && num >= 0 && num <= 59) {
-        onChange(`${hour}:${num.toString().padStart(2, '0')}`);
-      }
-    }
-  };
-
-  const handleMinuteBlur = () => {
-    let num = parseInt(tempMinute, 10);
-    if (isNaN(num) || num < 0 || num > 59) num = 0;
-    const formatted = num.toString().padStart(2, '0');
-    setTempMinute(formatted);
-    onChange(`${hour}:${formatted}`);
-  };
-
-  const handleHourIncrement = () => {
-    const currentHour = parseInt(hour, 10);
-    const nextHour = (currentHour + 1) % 24;
-    onChange(`${nextHour.toString().padStart(2, '0')}:${minute}`);
-  };
-
-  const handleHourDecrement = () => {
-    const currentHour = parseInt(hour, 10);
-    const prevHour = (currentHour - 1 + 24) % 24;
-    onChange(`${prevHour.toString().padStart(2, '0')}:${minute}`);
-  };
-
-  const minutesList = ['00', '05', '10', '15', '20', '25', '30', '35', '40', '45', '50', '55'];
-  
-  const handleMinuteIncrement = () => {
-    const currentIdx = minutesList.indexOf(minute);
-    let nextIdx = 0;
-    if (currentIdx !== -1) {
-      nextIdx = (currentIdx + 1) % minutesList.length;
-    } else {
-      const minVal = parseInt(minute, 10);
-      nextIdx = minutesList.findIndex(m => parseInt(m, 10) > minVal);
-      if (nextIdx === -1) nextIdx = 0;
-    }
-    onChange(`${hour}:${minutesList[nextIdx]}`);
-  };
-
-  const handleMinuteDecrement = () => {
-    const currentIdx = minutesList.indexOf(minute);
-    let prevIdx = minutesList.length - 1;
-    if (currentIdx !== -1) {
-      prevIdx = (currentIdx - 1 + minutesList.length) % minutesList.length;
-    } else {
-      const minVal = parseInt(minute, 10);
-      prevIdx = minutesList.findIndex(m => parseInt(m, 10) >= minVal) - 1;
-      if (prevIdx < 0) prevIdx = minutesList.length - 1;
-    }
-    onChange(`${hour}:${minutesList[prevIdx]}`);
-  };
-
-  return (
-    <div className="flex flex-col items-center">
-      <span className="text-sm font-bold text-primary mb-3 uppercase tracking-wider">{label}</span>
-      <div className="flex items-center gap-2 bg-muted/20 border border-border p-3.5 rounded-2xl w-[170px] justify-center">
-        {/* Hours Column */}
-        <div className="flex flex-col items-center">
-          <span className="text-[10px] uppercase tracking-wider font-semibold text-muted-foreground mb-1 select-none">Hora</span>
-          <button
-            type="button"
-            onClick={handleHourIncrement}
-            className="p-1 rounded-lg hover:bg-primary/10 text-foreground transition-colors cursor-pointer"
-          >
-            <ChevronUp className="w-5 h-5 text-primary" />
-          </button>
-          <input
-            type="text"
-            inputMode="numeric"
-            pattern="[0-9]*"
-            value={tempHour}
-            onChange={handleHourChange}
-            onBlur={handleHourBlur}
-            onFocus={(e) => {
-              const target = e.target;
-              setTimeout(() => {
-                target.select();
-              }, 0);
-            }}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') {
-                e.currentTarget.blur();
-              }
-            }}
-            className="w-14 h-12 text-center bg-muted/50 border border-border rounded-xl text-3xl font-bold text-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"
-          />
-          <button
-            type="button"
-            onClick={handleHourDecrement}
-            className="p-1 rounded-lg hover:bg-primary/10 text-foreground transition-colors cursor-pointer"
-          >
-            <ChevronDown className="w-5 h-5 text-primary" />
-          </button>
-        </div>
-
-        {/* Separator */}
-        <div className="text-3xl font-bold text-foreground/50 self-center mt-3 select-none">:</div>
-
-        {/* Minutes Column */}
-        <div className="flex flex-col items-center">
-          <span className="text-[10px] uppercase tracking-wider font-semibold text-muted-foreground mb-1 select-none">Minuto</span>
-          <button
-            type="button"
-            onClick={handleMinuteIncrement}
-            className="p-1 rounded-lg hover:bg-primary/10 text-foreground transition-colors cursor-pointer"
-          >
-            <ChevronUp className="w-5 h-5 text-primary" />
-          </button>
-          <input
-            type="text"
-            inputMode="numeric"
-            pattern="[0-9]*"
-            value={tempMinute}
-            onChange={handleMinuteChange}
-            onBlur={handleMinuteBlur}
-            onFocus={(e) => {
-              const target = e.target;
-              setTimeout(() => {
-                target.select();
-              }, 0);
-            }}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') {
-                e.currentTarget.blur();
-              }
-            }}
-            className="w-14 h-12 text-center bg-muted/50 border border-border rounded-xl text-3xl font-bold text-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"
-          />
-          <button
-            type="button"
-            onClick={handleMinuteDecrement}
-            className="p-1 rounded-lg hover:bg-primary/10 text-foreground transition-colors cursor-pointer"
-          >
-            <ChevronDown className="w-5 h-5 text-primary" />
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-
-
-interface TimeRangePickerProps {
-  startTime: string;
-  onChangeStartTime: (val: string) => void;
-  endTime: string;
-  onChangeEndTime: (val: string) => void;
-  disabled?: boolean;
-}
-
-const TimeRangePickerDropdown = ({ startTime, onChangeStartTime, endTime, onChangeEndTime, disabled }: TimeRangePickerProps) => {
-  const [isOpen, setIsOpen] = useState(false);
-
-  return (
-    <div className="w-full">
-      <button
-        type="button"
-        disabled={disabled}
-        onClick={() => setIsOpen(!isOpen)}
-        className={cn(
-          "w-full p-2.5 flex items-center rounded-xl bg-card text-foreground border border-border focus:border-primary outline-none transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed text-center justify-center gap-2",
-          isOpen && "border-primary ring-1 ring-primary/20",
-          !(startTime && endTime) && "text-muted-foreground/60 italic"
-        )}
-      >
-        <span className={cn("flex-1 text-center", startTime && endTime ? "font-bold" : "font-normal")}>
-          {startTime && endTime ? `${startTime} - ${endTime}` : 'Selecionar'}
-        </span>
-      </button>
-
-      <AnimatePresence>
-        {isOpen && (
-          <>
-            <div className="fixed inset-0 z-[240] bg-black/40 backdrop-blur-[4px]" onClick={() => setIsOpen(false)} />
-            <motion.div
-              initial={{ opacity: 0, y: -10, scale: 0.95 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: -10, scale: 0.95 }}
-              className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-[250] bg-card border border-border rounded-[2rem] shadow-2xl p-6 flex flex-col items-center gap-6 w-[90%] max-w-[480px]"
-            >
-              <div className="flex flex-col sm:flex-row gap-6 items-center justify-center w-full">
-                <ClockPickerWidget value={startTime} onChange={onChangeStartTime} label="Início" />
-                <ClockPickerWidget value={endTime} onChange={onChangeEndTime} label="Término" />
-              </div>
-
-              <button
-                type="button"
-                onClick={() => {
-                  if (!startTime) onChangeStartTime("00:00");
-                  if (!endTime) onChangeEndTime("00:00");
-                  setIsOpen(false);
-                }}
-                className={cn(
-                  "w-[170px] py-2.5 rounded-xl font-bold transition-all uppercase text-xs tracking-wider cursor-pointer mt-2",
-                  startTime && endTime 
-                    ? "bg-primary text-primary-foreground hover:opacity-90" 
-                    : "bg-muted text-muted-foreground hover:bg-muted/80"
-                )}
-              >
-                Definir
-              </button>
-            </motion.div>
-          </>
-        )}
-      </AnimatePresence>
-    </div>
-  );
-};
-
-const formatDescription = (item: CalendarItem) => {
-  if (!item.description) return "";
-  if (item.type === 'task') {
-    const names = item.description.split(',').map(n => n.trim()).filter(Boolean);
-    if (names.length === 1) {
-      return names[0];
-    }
-    if (names.length === 2) {
-      return `${names[0]} e ${names[1]}`;
-    }
-    if (names.length >= 3) {
-      const allButLast = names.slice(0, -1).join(', ');
-      const last = names[names.length - 1];
-      return `${allButLast} e ${last}`;
-    }
-  }
-  return item.description;
-};
+import { generateUUID, MEMBER_BIRTHDAYS, sendNotification, getModalidadeColor, isLocalhost } from './utils/helpers';
+import { formatDescription } from './utils/formatters';
+import { AdminIcon } from './components/ui/AdminIcon';
+import { TimeRangePickerDropdown } from './components/ui/TimePickers';
+import { Tab, ViewMode } from './types';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState<Tab>('cronograma');
@@ -711,6 +161,7 @@ export default function App() {
   });
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isBirthdayModalOpen, setIsBirthdayModalOpen] = useState(false);
+  const [isFutureTasksModalOpen, setIsFutureTasksModalOpen] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [selectedDay, setSelectedDay] = useState<number | null>(null);
   const [selectedMonth, setSelectedMonth] = useState<number | null>(null);
@@ -762,7 +213,7 @@ export default function App() {
   useEffect(() => { localStorage.setItem('smd_view', JSON.stringify(viewMode)); }, [viewMode]);
 
   useEffect(() => {
-    const isAnyModalOpen = isModalOpen || isBirthdayModalOpen || isAuthModalOpen || isDeleteConfirmOpen || !!selectedImage;
+    const isAnyModalOpen = isModalOpen || isBirthdayModalOpen || isFutureTasksModalOpen || isAuthModalOpen || isDeleteConfirmOpen || !!selectedImage;
     if (isAnyModalOpen) {
       document.documentElement.style.overflow = 'hidden';
       document.body.style.overflow = 'hidden';
@@ -774,7 +225,7 @@ export default function App() {
       document.documentElement.style.overflow = '';
       document.body.style.overflow = '';
     };
-  }, [isModalOpen, isBirthdayModalOpen, isAuthModalOpen, isDeleteConfirmOpen, selectedImage]);
+  }, [isModalOpen, isBirthdayModalOpen, isFutureTasksModalOpen, isAuthModalOpen, isDeleteConfirmOpen, selectedImage]);
   
   const displayDates = useMemo(() => {
     try {
@@ -893,85 +344,7 @@ export default function App() {
 
   return (
     <div className="min-h-[100dvh] bg-background text-foreground pb-24 md:pb-0 font-sans selection:bg-primary/20 transition-colors duration-300">
-      
-      {/* Dynamic Header */}
-      <header className="sticky top-0 z-40 bg-background/80 backdrop-blur-xl border-b border-border transition-colors">
-        <div className="max-w-5xl mx-auto px-2 md:px-6 h-16 flex items-center justify-center gap-4 md:gap-8">
-          <motion.button 
-            onClick={() => setActiveTab(activeTab === 'cronograma' ? 'tarefas' : 'cronograma')}
-            whileHover={{ scale: 1 }}
-            className="w-[36px] h-[36px] flex items-center justify-center flex-shrink-0 relative overflow-hidden transition-transform duration-200"
-            title={activeTab === 'cronograma' ? 'Ir para Modo Tarefa' : 'Ir para Modo Cronograma'}
-          >
-            <AnimatePresence initial={false}>
-              <motion.img 
-                key={activeTab}
-                src={activeTab === 'tarefas' ? taskMode : timelineMode} 
-                alt="Change App Mode" 
-                initial={{ y: 15, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                exit={{ y: -15, opacity: 0 }}
-                transition={{ duration: 0.25, ease: "easeInOut" }}
-                className="w-[24px] h-[24px] absolute z-10 drop-shadow-none theme-icon-green"
-              />
-            </AnimatePresence>
-          </motion.button>
-
-          <div className={cn("px-6 rounded-full flex-shrink-0 relative flex items-center justify-center w-[190px] sm:w-[220px] h-[30px]", darkMode ? "bg-[#262626ff]" : "bg-[#E2E2E2]")}>
-            <span className="text-xs font-display font-bold uppercase tracking-widest text-primary">
-              {activeTab === 'cronograma' ? 'CRONOGRAMA' : 'TAREFAS'}
-            </span>
-          </div>
-          
-          <button 
-            onClick={() => setDarkMode(!darkMode)} 
-            className={cn(
-              "w-[56px] h-[30px] shrink-0 rounded-full shadow-inner relative flex items-center px-[3px] transition-colors duration-500 overflow-hidden",
-              darkMode ? "bg-[#262626ff] border border-border/50" : "bg-[#e2e2e2]"
-            )}
-            style={{ boxShadow: 'inset 0 2px 5px rgba(0,0,0,0.1)' }}
-            title="Alternar Tema"
-          >
-            <div
-              className={cn(
-                "w-[24px] h-[24px] rounded-full flex items-center justify-center transition-all duration-300 ease-in-out transform",
-                darkMode ? "bg-[#121212ff] translate-x-[26px] rotate-[360deg]" : "bg-white translate-x-0 rotate-0 shadow-md"
-              )}
-              style={{ 
-                boxShadow: '0 2px 6px rgba(0,0,0,0.15)'
-              }}
-            >
-              {darkMode ? (
-                <Moon stroke="none" className="w-[14px] h-[14px] text-primary" fill="currentColor" />
-              ) : (
-                <Sun strokeWidth={3} className="w-[14px] h-[14px] text-primary" fill="currentColor" />
-              )}
-            </div>
-          </button>
-
-          <motion.button 
-            onClick={() => { 
-              if (isAdmin) setIsAdmin(false);
-              else {
-                setAdminPassword('');
-                setAuthError(false);
-                setIsAuthModalOpen(true);
-              }
-            }}
-            whileHover={{ scale: 1 }}
-            className="w-[36px] h-[36px] flex items-center justify-center shrink-0 transition-transform duration-200"
-            title="Modo Administrador"
-          >
-            <AdminIcon 
-              className={cn(
-                "w-[24px] h-[24px] transition-all duration-300 transform-gpu",
-                isAdmin ? "opacity-100" : "opacity-40 hover:opacity-100"
-              )} 
-              unlocked={isAdmin} 
-            />
-          </motion.button>
-        </div>
-      </header>
+      <Header activeTab={activeTab} setActiveTab={setActiveTab} darkMode={darkMode} setDarkMode={setDarkMode} isAdmin={isAdmin} setIsAdmin={setIsAdmin} setIsAuthModalOpen={setIsAuthModalOpen} setAdminPassword={setAdminPassword} setAuthError={setAuthError} />
 
       {/* Main Content Area */}
       <main className="max-w-5xl mx-auto px-6 py-6 min-h-[calc(100vh-160px)]">
@@ -1251,13 +624,13 @@ export default function App() {
                                 <div className="w-full flex flex-col items-center gap-2">
                                   {item.modalidade && (
                                     <span 
-                                      className="text-sm font-black uppercase tracking-widest italic text-center"
+                                      className="text-sm font-display font-bold uppercase tracking-widest text-center"
                                       style={{ color: getModalidadeColor(item.modalidade) }}
                                     >
                                       {item.modalidade}
                                     </span>
                                   )}
-                                  <h4 className="text-base font-display font-black text-foreground tracking-tight text-center leading-tight">
+                                  <h4 className="text-base font-display font-normal italic text-foreground tracking-tight text-center leading-tight">
                                     {item.title}
                                   </h4>
                                 </div>
@@ -1406,7 +779,7 @@ export default function App() {
                 return (
                   <div className="max-w-xl mx-auto">
                     {isAdmin && (
-                      <div className="flex justify-center -mt-2 mb-4">
+                      <div className="flex justify-center items-center gap-3 -mt-2 mb-4">
                         <button 
                           onClick={() => openAddModal(activeTaskDate, undefined, 'task', 'checklist')} 
                           className="flex items-center w-[150px] sm:w-[180px] h-[30px] rounded-full transition-all duration-200 hover:scale-105 cursor-pointer font-bold text-[9px] sm:text-xs uppercase tracking-wider border-0 bg-card text-primary px-0"
@@ -1418,6 +791,14 @@ export default function App() {
                           <div className="flex-1 flex items-center justify-center pr-2">
                             <span className="pt-[1px]">ADICIONAR TAREFA</span>
                           </div>
+                        </button>
+
+                        <button 
+                          onClick={() => setIsFutureTasksModalOpen(true)}
+                          className="flex items-center justify-center w-[30px] h-[30px] rounded-full transition-all duration-200 hover:scale-105 cursor-pointer border-0 bg-card text-primary p-0 shrink-0"
+                          title="Visualizar Tarefas Futuras"
+                        >
+                          <img src={eyeIcon} className="w-[16px] h-[16px] theme-icon-green" alt="Tarefas Futuras" />
                         </button>
                       </div>
                     )}
@@ -2490,6 +1871,134 @@ export default function App() {
           </div>
         )}
       </AnimatePresence>
+
+      {/* Future Tasks Modal */}
+      <AnimatePresence>
+        {isFutureTasksModalOpen && isAdmin && (
+          <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center pointer-events-none">
+            <div 
+              onClick={() => setIsFutureTasksModalOpen(false)} 
+              className="absolute inset-0 bottom-sheet-overlay pointer-events-auto" 
+            />
+            <motion.div 
+              initial={{ opacity: 0, y: 100 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 100 }}
+              transition={{ type: "spring", damping: 25, stiffness: 250 }}
+              className="w-full sm:max-w-md bg-background sm:rounded-[2rem] rounded-t-[2rem] shadow-2xl relative z-10 pointer-events-auto max-h-[90vh] flex flex-col overflow-hidden"
+            >
+              <div className="sticky top-0 bg-background z-20 pt-5 pb-3 px-6 flex items-center justify-center border-b border-border">
+                <div className="w-12 h-1.5 bg-muted rounded-full absolute top-2 left-1/2 -translate-x-1/2 sm:hidden" />
+                <h2 className="text-lg font-bold uppercase text-primary">
+                  TAREFAS FUTURAS
+                </h2>
+                <button 
+                  type="button" 
+                  onClick={() => setIsFutureTasksModalOpen(false)} 
+                  className="p-2 bg-muted hover:bg-muted-foreground/20 rounded-full transition-colors absolute right-4"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              <div className="p-6 space-y-6 overflow-y-auto no-scrollbar flex-1">
+                <div className="space-y-4">
+                  {(() => {
+                    const todayStart = startOfDay(new Date());
+                    const filteredTasks = items
+                      .filter(item => 
+                        item.type === 'task' && 
+                        item.category === 'checklist' && 
+                        isAfter(startOfDay(item.date), todayStart)
+                      )
+                      .sort((a, b) => a.date.getTime() - b.date.getTime());
+
+                    if (filteredTasks.length === 0) {
+                      return (
+                        <div className="text-center py-12 text-muted-foreground italic">
+                          Nenhuma tarefa futura agendada.
+                        </div>
+                      );
+                    }
+
+                    return filteredTasks.map(item => (
+                      <div 
+                        key={item.id} 
+                        className={cn(
+                          "p-4 border border-border rounded-2xl flex flex-col gap-2 transition-all",
+                          darkMode ? "bg-[#262626]" : "bg-[#E2E2E2]"
+                        )}
+                      >
+                        <div className="flex justify-between items-start gap-4">
+                          <div className="flex flex-col gap-0.5">
+                            <span className="text-[10px] font-bold text-primary">
+                              {format(item.date, "dd/MM")}
+                            </span>
+                            <span className="text-sm font-bold text-foreground">
+                              {item.title}
+                            </span>
+                            {item.description && (
+                              <span className="text-xs text-muted-foreground mt-1">
+                                {formatDescription(item)}
+                              </span>
+                            )}
+                            {(item.startTime || item.endTime) && (
+                              <span className="text-[10px] text-muted-foreground flex items-center gap-1 mt-1">
+                                <Clock className="w-3.5 h-3.5 text-primary" />
+                                <span>{item.startTime}{item.startTime && item.endTime ? ' - ' : ''}{item.endTime}</span>
+                              </span>
+                            )}
+                          </div>
+                          <div className="flex flex-col items-end gap-2 shrink-0 select-none">
+                            {item.modalidade && (
+                              <span className="px-2 py-0.5 rounded-full text-[9px] uppercase font-black bg-primary/10 text-primary tracking-wider whitespace-nowrap">
+                                {item.modalidade}
+                              </span>
+                            )}
+                            <div 
+                              className={cn(
+                                "flex items-center gap-3 px-3 py-1.5 bg-transparent border-[0.5px] rounded-full cursor-default mt-1",
+                                darkMode ? "border-zinc-600" : "border-zinc-500"
+                              )}
+                            >
+                              <button 
+                                onClick={() => {
+                                  setIsFutureTasksModalOpen(false);
+                                  openAddModal(item.date, item, 'task', 'checklist');
+                                }} 
+                                className="text-primary hover:opacity-80 transition-transform cursor-pointer"
+                                title="Editar"
+                              >
+                                <Pencil className="w-3.5 h-3.5" />
+                              </button>
+                              <div 
+                                className={cn(
+                                  "h-3 w-[0.5px]",
+                                  darkMode ? "bg-zinc-600" : "bg-zinc-500"
+                                )}
+                              />
+                              <button 
+                                onClick={() => {
+                                  setItemToDelete(item.id);
+                                  setIsDeleteConfirmOpen(true);
+                                }} 
+                                className="text-destructive hover:opacity-80 transition-transform cursor-pointer"
+                                title="Excluir"
+                              >
+                                <Trash className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ));
+                  })()}
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
       {/* Auth Modal (Custom In-App Password Area) */}
       <AnimatePresence>
         {isAuthModalOpen && (
@@ -2670,4 +2179,7 @@ export default function App() {
     </div>
   );
 }
+
+
+
 

@@ -14,3 +14,6 @@ export interface CalendarItem {
   order?: number;
   cover?: string;
 }
+
+export type Tab = 'cronograma' | 'tarefas';
+export type ViewMode = 'DAY' | 'MONTH' | 'YEAR';
