@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   width="132.29167mm"
+   height="75.40625mm"
+   viewBox="0 0 132.29167 75.40625"
+   version="1.1"
+   id="svg1"
+   xml:space="preserve"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg"><sodipodi:namedview
+     id="namedview1"
+     pagecolor="#505050"
+     bordercolor="#eeeeee"
+     borderopacity="1"
+     inkscape:showpageshadow="0"
+     inkscape:pageopacity="0"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#505050"
+     inkscape:document-units="mm"><inkscape:page
+       x="0"
+       y="0"
+       width="132.29167"
+       height="75.40625"
+       id="page2"
+       margin="0"
+       bleed="0" /></sodipodi:namedview><defs
+     id="defs1"><style
+       type="text/css"
+       id="style1">
+   
+    .fil0 {fill:black}
+   
+  </style></defs><g
+     inkscape:label="Camada 1"
+     inkscape:groupmode="layer"
+     id="layer1"><path
+       id="path1"
+       style="clip-rule:evenodd;fill:#00cc00;fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:0.264583;image-rendering:optimizeQuality;shape-rendering:geometricPrecision;text-rendering:geometricPrecision"
+       class="fil0"
+       d="M 66.230355,0 C 42.96715,0 19.676676,11.765802 0.84809084,35.297756 c -1.13127729,1.415296 -1.13129729,3.370192 0.003,4.785458 C 18.529159,62.129252 41.295434,75.40607 66.143975,75.40607 c 24.851101,0 47.619385,-13.279208 65.294885,-35.330376 1.13381,-1.410146 1.13663,-3.360082 0.0111,-4.777938 C 112.73063,11.765802 89.494609,0 66.231415,0 Z m -0.0843,9.4685874 c 15.608423,0 28.260212,12.6399096 28.260212,28.2336926 0,15.593793 -12.651789,28.236202 -28.260212,28.236202 -15.608423,0 -28.263223,-12.642409 -28.263223,-28.236202 0,-15.593783 12.6548,-28.2336926 28.263223,-28.2336926 z m 0,8.5043796 c -10.906104,0 -19.747843,8.833449 -19.747843,19.729313 0,10.895874 8.841739,19.728813 19.747843,19.728813 10.906104,0 19.747333,-8.832939 19.747333,-19.728813 0,-3.791211 -1.071748,-7.333203 -2.927983,-10.340995 -1.023258,3.331432 -4.1265,5.750686 -7.795302,5.750686 -4.504359,0 -8.15534,-3.647041 -8.15534,-8.147191 0,-2.684153 1.298237,-5.065188 3.303612,-6.549844 -1.347197,-0.287679 -2.740284,-0.441969 -4.17232,-0.441969 z" /></g></svg>
