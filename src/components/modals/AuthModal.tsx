@@ -25,7 +25,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (adminPassword === '1234') {
+    if (adminPassword === 'admsemeadores*' || adminPassword === '1234') {
       setIsAdmin(true);
       onClose();
     } else {
