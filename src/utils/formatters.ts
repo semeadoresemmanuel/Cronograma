@@ -11,8 +11,7 @@ export const formatDescription = (item: CalendarItem) => {
       return `${names[0]} e ${names[1]}`;
     }
     if (names.length > 2) {
-      const last = names.pop();
-      return `${names.join(', ')} e ${last}`;
+      return `${names.slice(0, -1).join(', ')} e ${names[names.length - 1]}`;
     }
     return item.description;
   }
