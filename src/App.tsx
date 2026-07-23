@@ -42,19 +42,19 @@ export default function App() {
     if (typeof window !== 'undefined') {
       const saved = localStorage.getItem('smd_view');
       if (saved) {
-        try { return JSON.parse(saved); } catch (e) { return 'MONTH'; }
+        try { return JSON.parse(saved); } catch (e) { return 'DAY'; }
       }
     }
-    return 'MONTH';
+    return 'DAY';
   });
   const [darkMode, setDarkMode] = useState(() => {
     if (typeof window !== 'undefined') {
       const saved = localStorage.getItem('smd_theme');
       if (saved) {
-        try { return JSON.parse(saved); } catch (e) { return true; }
+        try { return JSON.parse(saved); } catch (e) { return false; }
       }
     }
-    return true;
+    return false;
   });
 
   // Admin Access State
