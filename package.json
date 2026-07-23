@@ -5,8 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite --port=3000 --host=0.0.0.0",
-    "generate-pdf": "node Calendário/generate_pdfs.js",
-    "build": "node Calendário/generate_pdfs.js && vite build",
+    "generate-pdf": "node calendar/generate_pdfs.js",
+    "build": "node calendar/generate_pdfs.js && vite build",
     "preview": "vite preview",
     "clean": "rm -rf dist",
     "lint": "tsc --noEmit"
