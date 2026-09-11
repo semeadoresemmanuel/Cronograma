@@ -202,6 +202,7 @@ export const getModalidadeColor = (modalidade?: string): string => {
   switch (modalidade) {
     case 'Abertura':
     case 'Encerramento':
+    case 'Ensaio Musical':
     case 'Especial':
     case 'Obra Básica - O Evangelho Segundo o Espiritismo':
     case 'Obra Básica - O Livro dos Espíritos':
