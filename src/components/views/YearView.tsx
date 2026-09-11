@@ -96,7 +96,7 @@ export const YearView: React.FC<YearViewProps> = ({
                       <span className="font-bold shrink-0" style={{ color: getModalidadeColor(item.modalidade) }}>
                         {format(item.date, 'dd')}:
                       </span>
-                      <span className="truncate">{item.title}</span>
+                      <span className="truncate">{item.title || item.modalidade}</span>
                     </div>
                   ))
                 ) : (

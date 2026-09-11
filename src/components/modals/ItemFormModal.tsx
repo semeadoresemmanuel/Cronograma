@@ -545,6 +545,9 @@ export const ItemFormModal: React.FC<ItemFormModalProps> = ({
                                 if (['Ponto Facultativo', 'Feriado'].includes(opt)) {
                                   setFormCover(null);
                                 }
+                                if (opt === 'Ensaio Musical') {
+                                  setFormTitle('');
+                                }
                               }}
                               className={cn(
                                 "px-4 py-2 text-sm text-center rounded-lg transition-colors font-medium cursor-pointer",
@@ -564,18 +567,22 @@ export const ItemFormModal: React.FC<ItemFormModalProps> = ({
               </div>
 
               {/* Título / Tema */}
-              <div className="space-y-1">
-                <label className="block text-center text-sm font-medium text-foreground">
-                  {(formContext === 'recesso' || ['Ponto Facultativo', 'Feriado'].includes(selectedModalidade)) ? 'Título' : 'Tema'}
-                </label>
-                <input 
-                  name="title" 
-                  value={formTitle} 
-                  onChange={(e) => setFormTitle(e.target.value)}
-                  required
-                  className="w-full p-2.5 text-center rounded-xl bg-transparent border border-border focus:border-primary outline-none transition-all" 
-                />
-              </div>
+              {selectedModalidade !== 'Ensaio Musical' ? (
+                <div className="space-y-1">
+                  <label className="block text-center text-sm font-medium text-foreground">
+                    {(formContext === 'recesso' || ['Ponto Facultativo', 'Feriado'].includes(selectedModalidade)) ? 'Título' : 'Tema'}
+                  </label>
+                  <input 
+                    name="title" 
+                    value={formTitle} 
+                    onChange={(e) => setFormTitle(e.target.value)}
+                    required
+                    className="w-full p-2.5 text-center rounded-xl bg-transparent border border-border focus:border-primary outline-none transition-all" 
+                  />
+                </div>
+              ) : (
+                <input type="hidden" name="title" value="" />
+              )}
 
               {/* Horário (Event only) */}
               {formContext !== 'recesso' && !['Ponto Facultativo', 'Feriado'].includes(selectedModalidade) && (

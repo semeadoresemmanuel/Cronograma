@@ -51,8 +51,8 @@ export const MonthDayView: React.FC<MonthDayViewProps> = ({
             return timeA.localeCompare(timeB);
           });
           
-        const isFeriado = dayItems.some(i => i.modalidade?.toLowerCase().includes('feriado') || i.title.toLowerCase().includes('feriado'));
-        const isPontoFacultativo = dayItems.some(i => i.modalidade?.toLowerCase().includes('facultativo') || i.title.toLowerCase().includes('facultativo'));
+        const isFeriado = dayItems.some(i => i.modalidade?.toLowerCase().includes('feriado') || (i.title || '').toLowerCase().includes('feriado'));
+        const isPontoFacultativo = dayItems.some(i => i.modalidade?.toLowerCase().includes('facultativo') || (i.title || '').toLowerCase().includes('facultativo'));
 
         let dateColor = 'var(--primary)';
         if (isFeriado) dateColor = 'var(--destructive)';
@@ -168,9 +168,11 @@ export const MonthDayView: React.FC<MonthDayViewProps> = ({
                           {item.modalidade === 'Reforma Intima' ? 'Reforma Íntima' : item.modalidade}
                         </span>
                       )}
-                      <h4 className="text-base font-display font-normal italic text-foreground tracking-tight text-center leading-tight">
-                        {item.title}
-                      </h4>
+                      {item.title && (
+                        <h4 className="text-base font-display font-normal italic text-foreground tracking-tight text-center leading-tight">
+                          {item.title}
+                        </h4>
+                      )}
                     </div>
 
                     {/* Middle - Cover Image & Description */}
@@ -182,7 +184,7 @@ export const MonthDayView: React.FC<MonthDayViewProps> = ({
                             darkMode ? "border-zinc-600" : "border-zinc-500"
                           )}>
                             <div 
-                              onClick={() => item.cover && onSetSelectedImage({url: item.cover, title: item.title})}
+                              onClick={() => item.cover && onSetSelectedImage({url: item.cover, title: item.title || item.modalidade || ''})}
                               className={cn(
                                 "w-full aspect-square border rounded-2xl overflow-hidden relative flex items-center justify-center bg-muted/20",
                                 item.cover ? "cursor-zoom-in" : ""

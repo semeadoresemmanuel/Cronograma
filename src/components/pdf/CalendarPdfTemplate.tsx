@@ -235,10 +235,10 @@ export const CalendarPdfTemplate: React.FC<CalendarPdfTemplateProps> = ({
               const formattedDate = `${day}/${month}`;
               const isFeriado =
                 item.modalidade === 'Feriado' ||
-                item.title.toLowerCase().includes('feriado');
+                (item.title || '').toLowerCase().includes('feriado');
               const isFacultativo =
                 item.modalidade === 'Ponto Facultativo' ||
-                item.title.toLowerCase().includes('facultativo');
+                (item.title || '').toLowerCase().includes('facultativo');
 
               let rowTextColor = primaryColor;
               let rowFontWeight: React.CSSProperties['fontWeight'] = 500;
