@@ -105,7 +105,7 @@ export const CalendarPdfTemplate: React.FC<CalendarPdfTemplateProps> = ({
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px', height: '100%' }}>
           <svg
-            style={{ width: '32px', height: '32px' }}
+            style={{ width: '32px', height: '32px', display: 'block', flexShrink: 0 }}
             viewBox="0 0 132.29167 132.29167"
           >
             <g transform="translate(210.0792,160.86656)">
@@ -137,6 +137,9 @@ export const CalendarPdfTemplate: React.FC<CalendarPdfTemplateProps> = ({
               textTransform: 'uppercase',
               color: primaryColor,
               margin: 0,
+              lineHeight: 1,
+              position: 'relative',
+              top: '-3px',
               fontFamily: "'Lemon Milk', sans-serif",
             }}
           >
@@ -153,9 +156,15 @@ export const CalendarPdfTemplate: React.FC<CalendarPdfTemplateProps> = ({
             borderRadius: '50px',
             letterSpacing: '1px',
             fontFamily: "'Lemon Milk', sans-serif",
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            lineHeight: 1,
           }}
         >
-          {year}
+          <span style={{ position: 'relative', top: '-2.5px', display: 'inline-block' }}>
+            {year}
+          </span>
         </div>
       </header>
 

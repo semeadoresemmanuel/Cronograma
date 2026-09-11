@@ -45,7 +45,7 @@ export const YearView: React.FC<YearViewProps> = ({
           "px-6 h-[30px] rounded-full border border-border/40 shadow-inner flex items-center justify-center",
           darkMode ? "bg-[#262626]" : "bg-[#E2E2E2]"
         )}>
-          <span className="text-xs sm:text-sm font-display font-bold text-primary tracking-widest uppercase">
+          <span className="text-xs sm:text-sm font-display font-bold text-primary tracking-widest uppercase leading-none relative top-[-1px]">
             {currentYear}
           </span>
         </div>
