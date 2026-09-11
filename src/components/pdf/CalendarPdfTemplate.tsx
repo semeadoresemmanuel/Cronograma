@@ -80,7 +80,6 @@ export const CalendarPdfTemplate: React.FC<CalendarPdfTemplateProps> = ({
         height: '297mm',
         backgroundColor: bgColor,
         color: primaryColor,
-        border: `1px solid ${primaryColor}`,
         padding: '12mm 12mm 9mm 12mm',
         display: 'flex',
         flexDirection: 'column',
@@ -270,6 +269,9 @@ export const CalendarPdfTemplate: React.FC<CalendarPdfTemplateProps> = ({
                 modalidadeDisplay = 'Obra Básica - LDE';
               }
 
+              const isEnsaioMusical = item.modalidade?.trim() === 'Ensaio Musical';
+              const tematicaDisplay = isEnsaioMusical ? 'Ensaio Musical Semeadores' : (item.title || '');
+
               return (
                 <tr key={item.id} style={{ height: `${100 / Math.max(mergedSchedule.length, 1)}%` }}>
                   {/* Date Column */}
@@ -329,7 +331,7 @@ export const CalendarPdfTemplate: React.FC<CalendarPdfTemplateProps> = ({
                         color: rowTextColor,
                       }}
                     >
-                      {item.title || ''}
+                      {tematicaDisplay}
                     </div>
                   </td>
 
