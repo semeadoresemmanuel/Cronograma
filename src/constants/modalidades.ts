@@ -5,6 +5,7 @@ export const RECESSO_MODALIDADES = ['Feriado', 'Ponto Facultativo'] as const;
 export const ENCONTRO_MODALIDADES = [
   'Abertura',
   'Encerramento',
+  'Ensaio Musical',
   'Especial',
   'Obra Básica - O Evangelho Segundo o Espiritismo',
   'Obra Básica - O Livro dos Espíritos',
@@ -14,6 +15,7 @@ export const ENCONTRO_MODALIDADES = [
 export const ALL_EVENT_MODALIDADES = [
   'Abertura',
   'Encerramento',
+  'Ensaio Musical',
   'Especial',
   'Feriado',
   'Obra Básica - O Evangelho Segundo o Espiritismo',
