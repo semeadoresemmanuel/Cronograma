@@ -17,7 +17,7 @@ import {
   isAfter
 } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { collection, onSnapshot, doc, setDoc, deleteDoc } from 'firebase/firestore';
+import { collection, onSnapshot, doc, setDoc, deleteDoc, writeBatch } from 'firebase/firestore';
 import { db } from './lib/firebase';
 import { cn } from './lib/utils';
 import { generateUUID, isLocalhost, sendNotification } from './utils/helpers';
@@ -281,9 +281,10 @@ export default function App() {
       });
     });
 
-    // Asynchronously persist updated order in background
-    newOrder.forEach(async (item, index) => {
-      try {
+    // Atomically persist updated order in background via batch write
+    try {
+      const batch = writeBatch(db);
+      newOrder.forEach((item, index) => {
         const itemToSave = {
           ...item,
           order: index,
@@ -292,11 +293,14 @@ export default function App() {
         const cleanData = Object.fromEntries(
           Object.entries(itemToSave).filter(([_, v]) => v !== undefined)
         );
-        await setDoc(doc(db, 'items', item.id), cleanData);
-      } catch (err) {
-        console.error('Error saving reordered item:', err);
-      }
-    });
+        batch.set(doc(db, 'items', item.id), cleanData);
+      });
+      batch.commit().catch((err) => {
+        console.error('Error saving reordered items batch:', err);
+      });
+    } catch (err) {
+      console.error('Error creating reorder batch:', err);
+    }
   }, []);
 
   return (

@@ -1,5 +1,5 @@
 // Service Worker for Cronograma Semeadores (PWA Offline First)
-const CACHE_NAME = 'semeadores-cronograma-v18';
+const CACHE_NAME = 'semeadores-cronograma-v19';
 
 const STATIC_PRECACHE = [
   '/',

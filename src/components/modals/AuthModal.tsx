@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { motion } from 'motion/react';
 import { ChevronLeft } from 'lucide-react';
-import adminPadlock from '../../assets/icons/admin_padlock.svg';
+import { AdminIcon } from '../ui/AdminIcon';
 import eyeIcon from '../../assets/icons/eye.svg';
 import closedEyeIcon from '../../assets/icons/closed_eye.svg';
 
@@ -58,7 +58,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
         {/* Top Centered Lock & Title Block */}
         <div className="flex flex-col items-center text-center pt-2">
           <div className="flex items-center justify-center">
-            <img src={adminPadlock} className="w-9 h-9 theme-icon-green" alt="Cadeado" />
+            <AdminIcon className="w-9 h-9" />
           </div>
 
           {/* Text block moved lower */}

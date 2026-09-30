@@ -104,7 +104,14 @@ export const CalendarPdfTemplate: React.FC<CalendarPdfTemplateProps> = ({
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px', height: '100%' }}>
           <svg
-            style={{ width: '32px', height: '32px', display: 'block', flexShrink: 0 }}
+            style={{
+              width: '32px',
+              height: '32px',
+              display: 'block',
+              flexShrink: 0,
+              position: 'relative',
+              top: '2.5px',
+            }}
             viewBox="0 0 132.29167 132.29167"
           >
             <g transform="translate(210.0792,160.86656)">
@@ -161,7 +168,7 @@ export const CalendarPdfTemplate: React.FC<CalendarPdfTemplateProps> = ({
             lineHeight: 1,
           }}
         >
-          <span style={{ position: 'relative', top: '-2.5px', display: 'inline-block' }}>
+          <span style={{ position: 'relative', top: '-6.5px', display: 'inline-block' }}>
             {year}
           </span>
         </div>
@@ -238,7 +245,7 @@ export const CalendarPdfTemplate: React.FC<CalendarPdfTemplateProps> = ({
             </tr>
           </thead>
           <tbody>
-            {mergedSchedule.map(item => {
+            {mergedSchedule.map((item, index) => {
               const [, month, day] = item.date.split('-');
               const formattedDate = `${day}/${month}`;
               const isFeriado =
@@ -272,6 +279,10 @@ export const CalendarPdfTemplate: React.FC<CalendarPdfTemplateProps> = ({
               const isEnsaioMusical = item.modalidade?.trim() === 'Ensaio Musical';
               const tematicaDisplay = isEnsaioMusical ? 'Ensaio Musical Semeadores' : (item.title || '');
 
+              const isFirstRow = index === 0;
+              const isLastRow = index === mergedSchedule.length - 1;
+              const rowVerticalOffset = isLastRow ? '-3.5px' : isFirstRow ? '-1px' : '-2px';
+
               return (
                 <tr key={item.id} style={{ height: `${100 / Math.max(mergedSchedule.length, 1)}%` }}>
                   {/* Date Column */}
@@ -295,6 +306,8 @@ export const CalendarPdfTemplate: React.FC<CalendarPdfTemplateProps> = ({
                         height: '100%',
                         whiteSpace: 'nowrap',
                         color: rowTextColor,
+                        position: 'relative',
+                        top: rowVerticalOffset,
                       }}
                     >
                       <span style={{ fontSize: '6.5px', fontWeight: 700, lineHeight: 1 }}>
@@ -329,6 +342,8 @@ export const CalendarPdfTemplate: React.FC<CalendarPdfTemplateProps> = ({
                         textOverflow: 'ellipsis',
                         lineHeight: 1.1,
                         color: rowTextColor,
+                        position: 'relative',
+                        top: rowVerticalOffset,
                       }}
                     >
                       {tematicaDisplay}
@@ -358,6 +373,8 @@ export const CalendarPdfTemplate: React.FC<CalendarPdfTemplateProps> = ({
                         whiteSpace: 'nowrap',
                         lineHeight: 1.1,
                         color: rowTextColor,
+                        position: 'relative',
+                        top: rowVerticalOffset,
                       }}
                     >
                       {modalidadeDisplay}
